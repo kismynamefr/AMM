@@ -1,11 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
+import { Fragment } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import "./App.css";
+import Home from "./components/Home/Home";
+import Nav from "./components/Nav/Nav";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-    </div>
+    <Router>
+      <Fragment>
+        <Nav />
+        <div className="mainBody">
+          <Routes>
+            <Route exact path="/" element={<Home />} />
+          </Routes>
+        </div>
+      </Fragment>
+    </Router>
   );
-}
+};
 
 export default App;
