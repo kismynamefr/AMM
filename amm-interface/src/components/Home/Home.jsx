@@ -1,66 +1,102 @@
-import React, { memo, useEffect, useState } from "react";
-import styled from "styled-components";
-import CloseButton from "./CloseButton/CloseButton";
-import Ethereum from "../../assest/token/Ethereum";
-import FormBuy from "./FormBuy";
-import BNB from "../../assest/Icon/BNB";
-import Web3 from "web3";
-import { Factory, FactoryAddress } from "../../abi/Factory";
-import { Pair } from "../../abi/Pair";
-import { Router, RouterAddress } from "../../abi/Router";
 import axios from "axios";
+import { memo, useEffect, useState } from "react";
+import styled from "styled-components";
+import BNBIcon from "../../assest/Icon/BNB";
+import useProvider from "../../hooks/useProvider";
+import CloseButton from "./CloseButton/CloseButton";
+import FormBuy from "./FormBuy";
+import FormSell from "./FormSell";
+import UserBuy from "./UserBuy";
+import UserSell from "./UserSell";
 
 const Home = () => {
   const [closeNoti, setCloseNoti] = useState(false);
   const [openForm, setOpenForm] = useState(false);
+  const [openFormSell, setOpenFormSell] = useState(false);
   const [coinName, setCoinName] = useState({});
+  const { Provider } = useProvider();
   const [ether, setEther] = useState({
-    type: "",
+    type: "ETH",
+    network: "Ethereum",
     amount: 0,
   });
   const [USD, setUSD] = useState({
     type: "USDT",
+    network: "",
     amount: 0,
   });
-  const web3 = new Web3(process.env.REACT_APP_INFURA);
-  const USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
-  const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+  const [DAI, setDAI] = useState({
+    type: "DAI",
+    network: "Binance",
+    amount: 0,
+  });
+  const [BUSD, setBUSD] = useState({
+    type: "BUSD",
+    network: "Binance",
+    amount: 0,
+  });
+  const [BNB, setBNB] = useState({
+    type: "BNB",
+    network: "Binance",
+    amount: 0,
+  });
 
   const handleClosed = () => {
     setCloseNoti(true);
   };
 
   const handlePriceConvertUSD = async () => {
-    const factory = new web3.eth.Contract(Factory, FactoryAddress);
-    const pairAddress = await factory.methods.getPair(USDT, WETH).call();
-    const pair = new web3.eth.Contract(Pair, pairAddress);
-    const reserves = await pair.methods.getReserves().call();
-    const { _reserve0, _reserve1 } = reserves;
-    const router = new web3.eth.Contract(Router, RouterAddress);
-    const amountOut = await router.methods
-      .getAmountOut(`${1 * 10 ** 18}`, _reserve0, _reserve1)
-      .call();
-    const resultUSD =
-      (Number(amountOut) + Number((amountOut * 0.3) / 100)) / 1e6;
-    const data = await axios({
-      method: "get",
-      url: "https://free.currconv.com/api/v7/convert?q=USD_VND&compact=ultra&apiKey=e41422a078ac3f2d3bf7",
+    await Provider("Ethereum").then(async ({ amountOutEth, amountOutDAI }) => {
+      const resultUSD =
+        (Number(amountOutEth) + Number((amountOutEth * 0.3) / 100)) / 1e6;
+      const resultDAIUSD =
+        (Number(amountOutDAI) + Number((amountOutDAI * 0.3) / 100)) / 1e6;
+      const calcUSD = 23352 + 1050;
+      setUSD({
+        ...USD,
+        amount: calcUSD,
+      });
+      setEther({
+        ...ether,
+        amount: (resultUSD + (resultUSD * 0.3) / 100) * calcUSD,
+      });
+      setDAI({
+        ...DAI,
+        amount: (resultDAIUSD + (resultDAIUSD * 0.3) / 100) * calcUSD,
+      });
     });
-    const { USD_VND } = data.data;
-    const calcUSD_ETH = USD_VND + (USD_VND * 3.155) / 100;
-    setUSD({
-      type: "USDT",
-      amount: USD_VND + (USD_VND * 3.155) / 100,
-    });
-    setEther({
-      type: "ETH",
-      amount: (resultUSD + (resultUSD * 0.3) / 100) * calcUSD_ETH,
+  };
+  const handlePriceBSCConvertUSD = async () => {
+    const calcUSD = 23352 + 1050;
+    await Provider("Binance").then(({ amountOutBUSD, amountOutBNB }) => {
+      const resultBUSD =
+        (Number(amountOutBUSD) + Number((amountOutBUSD * 0.3) / 100)) / 1e6;
+      const resultBNB =
+        (Number(amountOutBNB) + Number((amountOutBNB * 0.3) / 100)) / 1e6;
+      setBNB({
+        ...BNB,
+        amount: (resultBNB + (resultBNB * 0.3) / 100) * calcUSD,
+      });
+      setBUSD({
+        ...BUSD,
+        amount: (resultBUSD + (resultBUSD * 0.3) / 100) * calcUSD,
+      });
     });
   };
 
   const handleOpenForm = (type) => {
     setCoinName(type);
     setOpenForm(true);
+    if(openFormSell) {
+      setOpenFormSell(false);
+    }
+  };
+  const handleOpenFormSell = (type) => {
+    setCoinName(type);
+    setOpenFormSell(true);
+    if(openForm) {
+      setOpenForm(false);
+    }
   };
 
   const fetchListCoinBuy = () => {
@@ -79,6 +115,45 @@ const Home = () => {
             </p>
           </Prices>
         </Users>
+        <Users onClick={() => handleOpenForm(BUSD)}>
+          <UsersConsident>
+            <Avatars src="https://seeklogo.com/images/B/binance-usd-busd-logo-A436FCF6B6-seeklogo.com.png" />
+            <UsersText>
+              <h4>BUSD</h4>
+            </UsersText>
+          </UsersConsident>
+          <Prices>
+            <p>
+              {BUSD.amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} VND
+            </p>
+          </Prices>
+        </Users>
+        <Users onClick={() => handleOpenForm(DAI)}>
+          <UsersConsident>
+            <Avatars src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png?v=022" />
+            <UsersText>
+              <h4>DAI</h4>
+            </UsersText>
+          </UsersConsident>
+          <Prices>
+            <p>
+              {DAI.amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} VND
+            </p>
+          </Prices>
+        </Users>
+        <Users onClick={() => handleOpenForm(BNB)}>
+          <UsersConsident>
+            <BNBIcon width="30px" height="30px" />
+            <UsersText>
+              <h4>BNB</h4>
+            </UsersText>
+          </UsersConsident>
+          <Prices>
+            <p>
+              {BNB.amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} VND
+            </p>
+          </Prices>
+        </Users>
         <Users onClick={() => handleOpenForm(ether)}>
           <UsersConsident>
             <Avatars src="https://cdn.worldvectorlogo.com/logos/ethereum-eth.svg" />
@@ -88,88 +163,28 @@ const Home = () => {
           </UsersConsident>
           <Prices>
             <p>
-              {ether.amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              {ether.amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
               VND
             </p>
           </Prices>
         </Users>
-        <Users onClick={() => handleOpenForm("BNB")}>
-          <UsersConsident>
-            <BNB width="25px" height="25px" />
-            <UsersText>
-              <h4>BNB</h4>
-            </UsersText>
-          </UsersConsident>
-          <Prices>
-            <p>5,138,370 VND</p>
-          </Prices>
-        </Users>
-      </>
-    );
-  };
-  const fetchListCoinSell = () => {
-    return (
-      <>
-        <Users>
-          <UsersConsident>
-            <Avatars src="https://seeklogo.com/images/T/tether-usdt-logo-FA55C7F397-seeklogo.com.png" />
-            <UsersText>
-              <h4>USDT</h4>
-            </UsersText>
-          </UsersConsident>
-          <Prices>
-            <p>22,000 VND</p>
-          </Prices>
-        </Users>
-      </>
-    );
-  };
-
-  const fetchListUsersBuy = () => {
-    return (
-      <>
-        <TitleRightSide>
-          <h4>Giao dịch thành công gần đây:</h4>
-        </TitleRightSide>
-        <UsersBuy>
-          <UsersConsident>
-            <UsersText>
-              <h5>Mua Ethereum</h5>
-              <p>{"Ox123214...24144x5"}</p>
-              <p style={{ color: "#8d8b8b" }}>1 hours ago</p>
-            </UsersText>
-          </UsersConsident>
-          <Prices>
-            <Ethereum height={15} width={15} />
-            <p>252,520 VND</p>
-          </Prices>
-        </UsersBuy>
-        <UsersBuy>
-          <UsersConsident>
-            <UsersText>
-              <h5>Mua Ethereum</h5>
-              <p>{"Ox123214...24144x5"}</p>
-              <p style={{ color: "#8d8b8b" }}>1 hours ago</p>
-            </UsersText>
-          </UsersConsident>
-          <Prices>
-            <Ethereum height={15} width={15} />
-            <p>252,520 VND</p>
-          </Prices>
-        </UsersBuy>
       </>
     );
   };
 
   useEffect(() => {
     handlePriceConvertUSD();
+    handlePriceBSCConvertUSD();
   }, []);
 
   return (
     <Container>
       <Notification trans={closeNoti ? "-100px" : "0px"}>
         <p>Dịch vụ khác của chúng tôi bao gồm:... </p>
-        <p>Vui lòng nhập mã giao dịch vào ghi chú giao dịch chuyển khoản. Nếu bạn cần hỗ trợ: Liên hệ ...</p>
+        <p>
+          Vui lòng nhập mã giao dịch vào ghi chú giao dịch chuyển khoản. Nếu bạn
+          cần hỗ trợ: Liên hệ ...
+        </p>
         <CloseButton handleClosed={handleClosed} />
       </Notification>
       <SideItem trans={closeNoti ? "-100px" : "0px"}>
@@ -183,10 +198,16 @@ const Home = () => {
           <TitleRightSide>
             <h4>Chọn Coin BẠN CẦN BÁN:</h4>
           </TitleRightSide>
-          {fetchListCoinSell()}
+          <UserSell setOpenFormSell={setOpenFormSell} handleOpenFormSell={handleOpenFormSell}/>
         </RightSide>
         <LeftSide>
-          {openForm ? <FormBuy coinName={coinName}/> : fetchListUsersBuy()}
+          {openForm ? (
+            <FormBuy coinName={coinName} />
+          ) : openFormSell ? (
+            <FormSell coinName={coinName}/>
+          ) : (
+            <UserBuy />
+          )}
         </LeftSide>
       </SideItem>
     </Container>
@@ -261,7 +282,7 @@ export const TitleRightSide = styled.div`
   justify-content: space-between;
   gap: 2rem;
 `;
-const Users = styled.div`
+export const Users = styled.div`
   display: flex;
   width: 100%;
   gap: 15px;
@@ -276,20 +297,20 @@ const Users = styled.div`
     border-radius: 10px;
   }
 `;
-const UsersConsident = styled.div`
+export const UsersConsident = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
 `;
-const UsersText = styled.div`
+export const UsersText = styled.div`
   transition: all 0.5s ease-out;
 `;
-const Prices = styled.div`
+export const Prices = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
 `;
-const Avatars = styled.img`
+export const Avatars = styled.img`
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -317,19 +338,6 @@ const LeftSide = styled.div`
   border: 2px solid #757575;
   padding: 1rem 2rem;
   transition: all 0.5s ease-out;
-`;
-const UsersBuy = styled.div`
-  display: flex;
-  width: 100%;
-  gap: 15px;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 10px;
-  p {
-    font-size: 13px;
-  }
 `;
 
 export default memo(Home);

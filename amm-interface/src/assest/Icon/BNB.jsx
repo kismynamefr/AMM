@@ -1,6 +1,6 @@
 import React from "react";
 
-const BNB = ({ width, height }) => {
+const BNBIcon = ({ width, height }) => {
   return (
     <svg
       width={width}
@@ -37,4 +37,4 @@ const BNB = ({ width, height }) => {
   );
 };
 
-export default BNB;
+export default BNBIcon;

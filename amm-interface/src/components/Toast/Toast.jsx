@@ -5,7 +5,7 @@ const Toast = (type, content, idLoading) => {
   let notify;
   const toastConfig = {
     position: "top-left",
-    autoClose: 3000,
+    autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: true,
@@ -14,7 +14,7 @@ const Toast = (type, content, idLoading) => {
   };
   const toastConfigLoading = {
     position: "top-left",
-    autoClose: 3000,
+    autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,

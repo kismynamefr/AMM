@@ -9,24 +9,30 @@ import useDebounce from "../../hooks/useDebounce";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
+import { Bank } from "./JSONBank";
 
-const FormBuy = ({ coinName }) => {
+const FormSell = ({ coinName }) => {
   const { type, amount, network } = coinName;
   const [openNetworks, setOpenNetworks] = useState(false);
+  const [openBanks, setOpenBanks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();
   const [formValue, setFormValue] = useState({
-    amountOut: "0",
+    amountIn: "0",
+    nameBank: "",
+    ownerBank: "",
+    txHash: "",
+    accountNumber: "",
+    condition: "Sell",
     network: !network ? "Ethereum" : network,
     typeCoin: type,
-    condition: "Buy",
-    walletAddress: "",
-    amountIn: "0",
+    amountOut: "0",
   });
+  console.log(formValue);
+  console.log(serialTransaction);
   const [formError, setFormError] = useState({});
   const [isSpinner, setIsSpinner] = useState(false);
-  const debounced = useDebounce(formValue, 500);
 
-  console.log(debounced);
+  const debounced = useDebounce(formValue, 500);
 
   const handleForm = (e) => {
     const { name, value } = e.target;
@@ -37,27 +43,38 @@ const FormBuy = ({ coinName }) => {
     return !openNetworks ? setOpenNetworks(true) : setOpenNetworks(false);
   };
 
+  const OpenChooseBank = () => {
+    return !openBanks ? setOpenBanks(true) : setOpenBanks(false);
+  };
+
   const test = () => {
     setFormError(validate(debounced));
   };
 
   const validate = (values) => {
     let errors = {};
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{42,}$/;
-    if (values.amountOut == "0") {
-      errors.amountOut = "Cannot be a Zero";
-      Toast("error", "Số dư không được bằng 0");
-    } else if (values.amountOut < 0.005) {
-      errors.amountOut = "Cannot be smaller 0.005";
+    const regexName = /^(?=.*?[0-9])(?=.*?[#?!@$%^&*-])$/;
+    if (values.amountIn == "0") {
+      errors.amountIn = "Cannot be a Zero";
+      Toast("error", "Số lượng không được bằng 0");
+    } else if (values.amountIn < 0.005) {
+      errors.amountIn = "Cannot be smaller 0.005";
       Toast("error", "Tối thiểu: 0.005");
     }
-    if (!values.walletAddress) {
-      errors.walletAddress = "Cannot be blank";
-    } else if (!regex.test(values.walletAddress)) {
-      errors.walletAddress = "Invalid wallet address format";
-      Toast("error", "Sai định dạng địa chỉ ví");
-    } else {
-      Toast("success", "Đúng định dạng địa chỉ ví");
+    if (values.ownerBank?.length < 9) {
+      errors.ownerBank = "Cannot be smaller 9 character";
+      Toast("error", "Tên chủ tài khoản tối thiểu 9 ký tự");
+    } else if (regexName.test(values.ownerBank)) {
+      errors.ownerBank = "Invalid owner format";
+      Toast("error", "Sai định dạng chủ tài khoản");
+    }
+    if (values.accountNumber?.length < 9) {
+      errors.accountNumber = "Cannot be smaller 9 character";
+      Toast("error", "Số tài khoản tối thiểu 9 ký tự");
+    }
+    if (values.nameBank?.length == "0") {
+      errors.nameBank = "Cannot be blank";
+      Toast("error", "Vui lòng chọn loại ngân hàng");
     }
     return errors;
   };
@@ -76,31 +93,56 @@ const FormBuy = ({ coinName }) => {
     const beginTime = Math.floor(new Date().getTime() / 1000);
     const lastestTime = beginTime + 30 * 60;
     setIsSpinner(true);
-    Toast("loading", "Đang xử lý tạo giao dịch...");
+    const idLoading = Toast("loading", "Đang xử lý tạo giao dịch...");
     axios({
       method: "post",
       url: "http://localhost:5506/users",
       data: {
         ...debounced,
-        amountIn: (debounced.amountOut * amount).toFixed(0),
+        amountOut: (debounced.amountIn * amount).toFixed(0),
         serial: serialTransaction,
+        condition: "Sell",
         status: "pending",
-        condition: "Buy",
         beginTime: beginTime,
         lastestTime: lastestTime,
       },
     }).then((data) => {
       console.log(data.data.status);
       if (data.data.status === "Success") {
+        Toast("update success", "Tạo giao dịch thành công...", idLoading);
         setTimeout(() => {
-          window.location.href = `http://localhost:3000/Exchange/Transaction/${serialTransaction}`;
+          window.location.href = `http://localhost:3000/Exchange/TransactionHash/${serialTransaction}`;
         }, 5000);
       }
     });
   };
 
+  const handleCheckBank = () => {
+    const result = Bank.filter((value) => value.name === formValue.nameBank);
+    return result.length > 0 ? (
+      result.map((value, index) => (
+        <>
+          <Avatars src={value.urlIcon} />
+          <InputNetwork
+            aria-invalid="false"
+            name="nameBank"
+            readOnly
+            aria-haspopup="true"
+            value={value.name}
+          />
+        </>
+      ))
+    ) : (
+      <p>Chọn loại ngân hàng</p>
+    );
+  };
+
   useEffect(() => {
-    if (debounced.walletAddress != "0" && debounced.walletAddress.length >= 1) {
+    if (
+      debounced.accountNumber.length > 0 &&
+      debounced.ownerBank.length > 0 &&
+      debounced.amountIn > 0
+    ) {
       test();
     }
   }, [debounced]);
@@ -109,12 +151,15 @@ const FormBuy = ({ coinName }) => {
     const serial = makeRandomSerials(10);
     setSerialTransaction(serial);
     setFormValue({
-      amountOut: "0",
+      amountIn: "0",
+      nameBank: "",
+      ownerBank: "",
+      txHash: "",
+      accountNumber: "",
+      condition: "Sell",
       network: !network ? "Ethereum" : network,
       typeCoin: type,
-      condition: "Buy",
-      walletAddress: "",
-      amountIn: "0",
+      amountOut: "0",
     });
     setOpenNetworks(false);
   }, [type]);
@@ -122,61 +167,25 @@ const FormBuy = ({ coinName }) => {
   return (
     <>
       <TitleRightSide>
-        <h4>Số tiền {type} cần mua:</h4>
+        <h4>Số lượng {type} cần bán:</h4>
       </TitleRightSide>
       <AmountIn>
         <input
           type="number"
-          name="amountOut"
+          name="amountIn"
           onChange={handleForm}
           min="0.005"
-          value={formValue.amountOut}
+          value={formValue.amountIn}
         />
         <span>{type}</span>
       </AmountIn>
       <TitleRightSide>
-        <h4>Chọn loại {type} cần mua (Blockchain):</h4>
+        <h4>Chọn loại {type} cần bán (Blockchain):</h4>
       </TitleRightSide>
-      <ChooseNetwork onClick={OpenChooseNetwork}>
-        {formValue.network && formValue.network === "Binance" ? (
-          <>
-            <BNB width="25px" height="25px" />
-            <InputNetwork
-              aria-invalid="false"
-              name="network"
-              readOnly
-              aria-haspopup="true"
-              value="Binance"
-              onClick={handleForm}
-            />
-          </>
-        ) : (
-          <>
-            <Ethereum width="25px" height="25px" />
-            <InputNetwork
-              aria-invalid="false"
-              name="network"
-              readOnly
-              aria-haspopup="true"
-              value="Ethereum"
-            />
-          </>
-        )}
-        <IconInput>{openNetworks ? <ArrowUp /> : <ArrowDown />}</IconInput>
-        {openNetworks && !network ? (
-          <OptionNetwork>
-            <ValueOption>
-              <Ethereum width="25px" height="25px" />
-              <InputNetwork
-                aria-invalid="false"
-                name="network"
-                readOnly
-                aria-haspopup="true"
-                value="Ethereum"
-                onClick={handleForm}
-              />
-            </ValueOption>
-            <ValueOption>
+      <HalveButton>
+        <ChooseNetwork onClick={OpenChooseNetwork}>
+          {formValue.network && formValue.network === "Binance" ? (
+            <>
               <BNB width="25px" height="25px" />
               <InputNetwork
                 aria-invalid="false"
@@ -186,22 +195,81 @@ const FormBuy = ({ coinName }) => {
                 value="Binance"
                 onClick={handleForm}
               />
-            </ValueOption>
-          </OptionNetwork>
-        ) : null}
-      </ChooseNetwork>
+            </>
+          ) : (
+            <>
+              <Ethereum width="25px" height="25px" />
+              <InputNetwork
+                aria-invalid="false"
+                name="network"
+                readOnly
+                aria-haspopup="true"
+                value="Ethereum"
+              />
+            </>
+          )}
+          <IconInput>{openNetworks ? <ArrowUp /> : <ArrowDown />}</IconInput>
+          {openNetworks && !network ? (
+            <OptionNetwork>
+              <ValueOption>
+                <Ethereum width="25px" height="25px" />
+                <InputNetwork
+                  aria-invalid="false"
+                  name="network"
+                  readOnly
+                  aria-haspopup="true"
+                  value="Ethereum"
+                  onClick={handleForm}
+                />
+              </ValueOption>
+              <ValueOption>
+                <BNB width="25px" height="25px" />
+                <InputNetwork
+                  aria-invalid="false"
+                  name="network"
+                  readOnly
+                  aria-haspopup="true"
+                  value="Binance"
+                  onClick={handleForm}
+                />
+              </ValueOption>
+            </OptionNetwork>
+          ) : null}
+        </ChooseNetwork>
+        <ChooseNetwork onClick={OpenChooseBank}>
+          {handleCheckBank()}
+          <IconInput>{openNetworks ? <ArrowUp /> : <ArrowDown />}</IconInput>
+          {openBanks ? (
+            <OptionNetwork>
+              {Bank.map((value, index) => (
+                <ValueOption key={index}>
+                  <Avatars src={value.urlIcon} />
+                  <InputNetwork
+                    aria-invalid="false"
+                    name="nameBank"
+                    readOnly
+                    aria-haspopup="true"
+                    value={value.name}
+                    onClick={handleForm}
+                  />
+                </ValueOption>
+              ))}
+            </OptionNetwork>
+          ) : null}
+        </ChooseNetwork>
+      </HalveButton>
       <TitleRightSide>
-        <h4>Số tiền bạn cần thanh toán:</h4>
+        <h4>Số tiền bạn nhận được:</h4>
       </TitleRightSide>
       <AmountOut>
         <InputAmountOut
           aria-invalid="false"
-          name="amountIn"
+          name="amountOut"
           readOnly
           value={
-            debounced.amountOut != 0 && debounced.amountOut < 0.005
+            debounced.amountIn !== 0 && debounced.amountIn < 0.005
               ? "NaN"
-              : (debounced.amountOut * amount)
+              : (debounced.amountIn * amount)
                   .toFixed(0)
                   .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
           }
@@ -209,23 +277,34 @@ const FormBuy = ({ coinName }) => {
         <span>VND</span>
       </AmountOut>
       <TitleRightSide>
-        <h4>
-          Địa chỉ ví {type}{" "}
-          {!formValue.network ? "Ethereum" : formValue.network} nhận tiền:
-        </h4>
+        <h4>Tên chủ tài khoản nhận tiền:</h4>
       </TitleRightSide>
       <AmountIn>
         <input
           type="text"
-          name="walletAddress"
+          name="ownerBank"
           onChange={handleForm}
-          maxLength="42"
+          maxLength="25"
+          style={{ textTransform: "uppercase" }}
+          value={formValue.ownerBank}
         />
-        <span>0x...</span>
+      </AmountIn>
+      <TitleRightSide>
+        <h4>Số tài khoản:</h4>
+      </TitleRightSide>
+      <AmountIn>
+        <input
+          type="text"
+          name="accountNumber"
+          onChange={handleForm}
+          maxLength="19"
+          value={formValue.accountNumber}
+        />
       </AmountIn>
       {formError.length != 0 &&
-      formValue.amountOut > "0.005" &&
-      formValue.walletAddress.length === 42 ? (
+      formValue.amountIn >= "0.005" &&
+      formValue.ownerBank?.length >= 9 &&
+      formValue.accountNumber?.length >= 9 ? (
         isSpinner ? (
           <ButtonContinues>
             <Spinner />
@@ -239,6 +318,17 @@ const FormBuy = ({ coinName }) => {
     </>
   );
 };
+
+export const Avatars = styled.img`
+  width: 30px;
+  height: 30px;
+  transition: all 0.5s ease-out;
+  object-fit: cover;
+  @media only screen and (max-width: 1700px) {
+    width: 30px;
+    height: 30px;
+  }
+`;
 const AmountIn = styled.div`
   display: flex;
   input {
@@ -299,10 +389,16 @@ const AmountOut = styled.div`
     }
   }
 `;
+const HalveButton = styled.div`
+  display: flex;
+  width: 100%;
+  gap: 10px;
+`;
 export const ChooseNetwork = styled.div`
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   border-radius: 5px;
   border: 2px solid rgb(37 155 159);
   width: 100%;
@@ -396,4 +492,4 @@ const ButtonContinues = styled.div`
   cursor: not-allowed;
 `;
 
-export default memo(FormBuy);
+export default memo(FormSell);
