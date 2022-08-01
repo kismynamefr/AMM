@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import collection from "../interfaces/transactionInterfaces";
+import trxInterface from "../interfaces/transactionInterfaces";
 
 const collectionSchema: Schema = new Schema(
   {
@@ -24,4 +24,4 @@ const collectionSchema: Schema = new Schema(
   }
 );
 
-export default mongoose.model<collection>("Transaction", collectionSchema);
+export default mongoose.model<trxInterface>("Transaction", collectionSchema);

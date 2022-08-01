@@ -1,6 +1,6 @@
 import { Document } from "mongoose";
 
-export default interface collection extends Document {
+export default interface trxInterface extends Document {
     serial: String,
     walletAddress: String,
     network: String,

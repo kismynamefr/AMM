@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
-import users from "../models/transactionModel";
+import Transaction from "../models/transactionModel";
 import { removeVietnameseTones } from "./handleOwnerbank";
 import { checkNetwork } from "./handleTransactionHash";
 dotenv.config();
@@ -13,7 +13,7 @@ const SaveTransaction = async (
   const formData = req.body;
   console.log(formData);
   if (formData.condition === "Sell") {
-    const dto = new users({
+    const dto = new Transaction({
       ...formData,
       ownerBank: removeVietnameseTones(formData.ownerBank).toUpperCase(),
     });
@@ -22,7 +22,7 @@ const SaveTransaction = async (
       .then((data) => res.status(200).json({ status: "Success" }))
       .catch((error) => res.status(200).json({ status: "Error" }));
   } else if (formData.condition === "Buy") {
-    const dto = new users(formData);
+    const dto = new Transaction(formData);
     dto
       .save()
       .then((data) => res.status(200).json({ status: "Success" }))
@@ -35,7 +35,7 @@ const GetTransaction = async (
   next: NextFunction
 ) => {
   const { serial } = req.params;
-  const result = await users.findOne({
+  const result = await Transaction.findOne({
     serial: serial,
   });
   return result
@@ -49,7 +49,7 @@ const GetTransactionHash = async (
   next: NextFunction
 ) => {
   const { serial } = req.params;
-  const result: any = await users.findOne({
+  const result: any = await Transaction.findOne({
     serial: serial,
   });
   if (result?.condition === "Sell") {
@@ -68,7 +68,7 @@ const HandleTransactionHash = async (
 ) => {
   const formValue = req.body;
   console.log("form post: ", req.body);
-  const result: any = await users.findOne({
+  const result: any = await Transaction.findOne({
     serial: formValue.serial,
   });
   if (
@@ -85,7 +85,7 @@ const HandleTransactionHash = async (
     );
     console.log("result: ", data);
     if (data) {
-      await users.updateOne(
+      await Transaction.updateOne(
         { serial: formValue.serial },
         { txHash: formValue.txHash }
       );
@@ -105,7 +105,7 @@ const getTransactionSuccess = async (
   next: NextFunction
 ) => {
   const { status } = req.params;
-  const result = await users.find({
+  const result = await Transaction.find({
     status: status,
   });
   return result

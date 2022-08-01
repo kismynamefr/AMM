@@ -6,8 +6,10 @@ import logging from "./config/logging";
 import config from "./config/config";
 import mongoose from "mongoose";
 import routerTrx from "./routes/transactionRouter";
+import routerUsers from "./routes/userRouter";
 import cookieParser from "cookie-parser";
 import "./schedule/historybank";
+import { NextFunction, Request, Response } from "express";
 
 const NAMESPACE = "Server";
 const app = express();
@@ -24,7 +26,7 @@ mongoose
   });
 
 /** Log the request */
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   /** Log the req */
   logging.info(
     NAMESPACE,
@@ -49,7 +51,7 @@ app.use(cors());
 app.use(cookieParser());
 
 /** Rules of our API */
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
@@ -66,10 +68,10 @@ app.use((req, res, next) => {
 
 /** Routes go here */
 app.use("/users", routerTrx);
-// app.use("/v1/users/register", router);
+app.use("/v1/users", routerUsers);
 
 /** Error handling */
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const error = new Error("Not found");
 
   res.status(404).json({

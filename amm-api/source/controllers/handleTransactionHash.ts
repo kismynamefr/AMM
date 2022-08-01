@@ -1,14 +1,10 @@
-import Web3 from "web3";
-import dotenv from "dotenv";
 import axios from "axios";
 import BN from "bn.js";
-dotenv.config();
+import dotenv from "dotenv";
 import {
-  BUSD_BSC_TESTNET_ADDRESS,
-  USDT_ETH_ADDRESS,
-  USDT_BSC_ADDRESS,
-  DAI_BSC_ADDRESS,
+  BUSD_BSC_TESTNET_ADDRESS, DAI_BSC_ADDRESS, USDT_BSC_ADDRESS, USDT_ETH_ADDRESS
 } from "../abi/Tether";
+dotenv.config();
 
 export const checkNetwork = async (
   network: String,
@@ -23,12 +19,9 @@ export const checkNetwork = async (
       console.log("Ethereum");
       resultEtherAPI = await getTransactionHashByEtherAPI(typeCoin);
       const txHashEtherAPI = resultEtherAPI?.filter(
-        (rols: any) =>
-          rols?.hash === txHash &&
-          rols?.tokenSymbol === typeCoin
+        (rols: any) => rols?.hash === txHash && rols?.tokenSymbol === typeCoin
       );
       return txHashEtherAPI;
-      break;
     case "Binance":
       console.log("Binance");
       resultBSCAPI = await getTransactionHashByBSCAPI(typeCoin);

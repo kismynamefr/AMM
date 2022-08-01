@@ -13,7 +13,7 @@ import {
   DAI_BSC_ABI,
   DAI_BSC_ADDRESS,
 } from "../abi/Tether";
-import users from "../models/transactionModel";
+import Transaction from "../models/transactionModel";
 dotenv.config();
 
 const sendEther = async (
@@ -114,16 +114,16 @@ const sendTrx = async (
 };
 
 const reUpStatusFailed = async (serial: String) => {
-  await users.updateOne({ serial: serial }, { status: "failed" });
+  await Transaction.updateOne({ serial: serial }, { status: "failed" });
   console.log(`Update status failed for serial ${serial}`);
 };
 const reUpStatusSuccess = async (serial: String) => {
-  await users.updateOne({ serial: serial }, { status: "success" });
+  await Transaction.updateOne({ serial: serial }, { status: "success" });
   console.log(`Update status success for serial ${serial}`);
 };
 
 const checkTxFailed = async () => {
-  const fetchUsers = await users.find();
+  const fetchUsers = await Transaction.find();
   const resultFinal = fetchUsers?.filter((res) => {
     if (res.status === "pending") {
       if (res.lastestTime < Math.floor(new Date().getTime() / 1000)) {
