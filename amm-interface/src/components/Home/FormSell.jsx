@@ -27,8 +27,7 @@ const FormSell = ({ coinName }) => {
     typeCoin: type,
     amountOut: "0",
   });
-  console.log(formValue);
-  console.log(serialTransaction);
+
   const [formError, setFormError] = useState({});
   const [isSpinner, setIsSpinner] = useState(false);
 
@@ -96,7 +95,7 @@ const FormSell = ({ coinName }) => {
     const idLoading = Toast("loading", "Đang xử lý tạo giao dịch...");
     axios({
       method: "post",
-      url: "http://localhost:5506/users",
+      url: "http://localhost:5506/v1/transaction/",
       data: {
         ...debounced,
         amountOut: (debounced.amountIn * amount).toFixed(0),

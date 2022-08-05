@@ -4,13 +4,15 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { ToastContainer } from "react-toastify";
+import { Provider } from "react-redux";
+import store from "./redux/store";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <>
+  <Provider store={store}>
     <App />
-    <ToastContainer limit={3}/>
-  </>
+    <ToastContainer limit={3} />
+  </Provider>
 );
 
 reportWebVitals();

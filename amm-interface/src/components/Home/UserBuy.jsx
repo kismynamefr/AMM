@@ -5,9 +5,11 @@ import BNBIcon from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
 import Spinner from "../Spinner/Spinner";
 import {
-    Avatars, Prices, TitleRightSide,
-    UsersConsident,
-    UsersText
+  Avatars,
+  Prices,
+  TitleRightSide,
+  UsersConsident,
+  UsersText,
 } from "./Home";
 
 const UserBuy = () => {
@@ -16,6 +18,38 @@ const UserBuy = () => {
 
   const splitAccount = (account) => {
     return account.substring(0, 6) + "..." + account.substring(38, 42);
+  };
+
+  const handleIconCoin = (typeCoin) => {
+    switch (typeCoin) {
+      case "DAI":
+        return (
+          <Avatars
+            style={{ width: "20px", height: "20px" }}
+            src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png?v=022"
+          />
+        );
+      case "BNB":
+        return <BNBIcon width="20px" height="20px" />;
+      case "BUSD":
+        return (
+          <Avatars
+            style={{ width: "20px", height: "20px" }}
+            src="https://seeklogo.com/images/B/binance-usd-busd-logo-A436FCF6B6-seeklogo.com.png"
+          />
+        );
+      case "USDT":
+        return (
+          <Avatars
+            style={{ width: "20px", height: "20px" }}
+            src="https://seeklogo.com/images/T/tether-usdt-logo-FA55C7F397-seeklogo.com.png"
+          />
+        );
+      case "ETH":
+        return <Ethereum height={15} width={15} />;
+      default:
+        return null;
+    }
   };
 
   const fetchListUsersBuy = () => {
@@ -53,7 +87,11 @@ const UserBuy = () => {
                       {res.condition === "Buy" ? "Mua" : "Bán"} {res.typeCoin}{" "}
                       {res.network}
                     </h5>
-                    <p>{splitAccount(res.walletAddress)}</p>
+                    {res.condition === "Buy" ? (
+                      <p>{splitAccount(res.walletAddress)}</p>
+                    ) : (
+                      <p>{res.nameBank}</p>
+                    )}
                     <p style={{ color: "#8d8b8b" }}>
                       {timeRight > 60
                         ? `${(timeRight / 60).toFixed(0)} giờ trước`
@@ -62,31 +100,9 @@ const UserBuy = () => {
                   </UsersText>
                 </UsersConsident>
                 <Prices>
-                  {res.typeCoin === "ETH" ? (
-                    <Ethereum height={15} width={15} />
-                  ) : res.typeCoin === "USDT" ? (
-                    <Avatars
-                      style={{ width: "20px", height: "20px" }}
-                      src="https://seeklogo.com/images/T/tether-usdt-logo-FA55C7F397-seeklogo.com.png"
-                    />
-                  ) : res.typeCoin === "BUSD" ? (
-                    <Avatars
-                      style={{ width: "20px", height: "20px" }}
-                      src="https://seeklogo.com/images/B/binance-usd-busd-logo-A436FCF6B6-seeklogo.com.png"
-                    />
-                  ) : res.typeCoin === "BNB" ? (
-                    <BNBIcon width="20px" height="20px" />
-                  ) : res.typeCoin === "DAI" ? (
-                    <Avatars
-                      style={{ width: "20px", height: "20px" }}
-                      src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png?v=022"
-                    />
-                  ) : null}
+                  {handleIconCoin(res.typeCoin)}
                   <p>
-                    {res.amountIn
-                      .toFixed(0)
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ""}{" "}
-                    VND
+                    {res.condition === "Buy" ? res.amountOut : res.amountIn}
                   </p>
                 </Prices>
               </UsersBuy>
@@ -100,7 +116,7 @@ const UserBuy = () => {
     startTransition(() => {
       axios({
         method: "get",
-        url: `http://localhost:5506/users/transactionStatus/success`,
+        url: `http://localhost:5506/v1/transaction/getTransactionSuccess/success`,
       }).then((data) => {
         setResultTransactionStatus(data.data.result);
       });

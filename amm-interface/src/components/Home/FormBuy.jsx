@@ -9,9 +9,15 @@ import useDebounce from "../../hooks/useDebounce";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
+import sendTx from "../../redux/apiRequest/apiRequestSendTx";
+import { useDispatch, useSelector } from "react-redux";
+import DelayedLink from "../DelayLink/DelayLink";
 
 const FormBuy = ({ coinName }) => {
   const { type, amount, network } = coinName;
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const statusSendTX = useSelector((state) => state.sendTx.sendTX?.status);
+  const dispatch = useDispatch();
   const [openNetworks, setOpenNetworks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();
   const [formValue, setFormValue] = useState({
@@ -25,8 +31,6 @@ const FormBuy = ({ coinName }) => {
   const [formError, setFormError] = useState({});
   const [isSpinner, setIsSpinner] = useState(false);
   const debounced = useDebounce(formValue, 500);
-
-  console.log(debounced);
 
   const handleForm = (e) => {
     const { name, value } = e.target;
@@ -72,15 +76,12 @@ const FormBuy = ({ coinName }) => {
     return result;
   }
 
-  const handleExcept = () => {
+  const handleExcept = async() => {
     const beginTime = Math.floor(new Date().getTime() / 1000);
     const lastestTime = beginTime + 30 * 60;
     setIsSpinner(true);
-    Toast("loading", "Đang xử lý tạo giao dịch...");
-    axios({
-      method: "post",
-      url: "http://localhost:5506/users",
-      data: {
+    sendTx(
+      {
         ...debounced,
         amountIn: (debounced.amountOut * amount).toFixed(0),
         serial: serialTransaction,
@@ -89,14 +90,9 @@ const FormBuy = ({ coinName }) => {
         beginTime: beginTime,
         lastestTime: lastestTime,
       },
-    }).then((data) => {
-      console.log(data.data.status);
-      if (data.data.status === "Success") {
-        setTimeout(() => {
-          window.location.href = `http://localhost:3000/Exchange/Transaction/${serialTransaction}`;
-        }, 5000);
-      }
-    });
+      user.accessToken,
+      dispatch
+    );
   };
 
   useEffect(() => {
@@ -223,18 +219,27 @@ const FormBuy = ({ coinName }) => {
         />
         <span>0x...</span>
       </AmountIn>
-      {formError.length != 0 &&
-      formValue.amountOut > "0.005" &&
-      formValue.walletAddress.length === 42 ? (
-        isSpinner ? (
-          <ButtonContinues>
-            <Spinner />
-          </ButtonContinues>
+      {user ? (
+        formError.length != 0 &&
+        formValue.amountOut >= "0.005" &&
+        formValue.walletAddress.length === 42 ? (
+          isSpinner ? (
+            <ButtonContinues>
+              <Spinner />
+            </ButtonContinues>
+          ) : (
+            <DelayedLink
+              delay={5000}
+              to={`/Exchange/Transaction/${serialTransaction}`}
+              state={serialTransaction}
+              handleExcept={handleExcept}
+            />
+          )
         ) : (
-          <ButtonContinue onClick={handleExcept}>Tiếp Tục</ButtonContinue>
+          <ButtonContinues>Tiếp Tục</ButtonContinues>
         )
       ) : (
-        <ButtonContinues>Tiếp Tục</ButtonContinues>
+        <ButtonContinues>Bạn phải đăng nhập để tiếp tục</ButtonContinues>
       )}
     </>
   );
@@ -342,7 +347,7 @@ export const OptionNetwork = styled.ul`
   inset: 0px 0px auto 0px;
   transform: translate3d(0, 44px, 0px);
 `;
-const ValueOption = styled.li`
+export const ValueOption = styled.li`
   display: flex;
   padding: 10px;
   border-bottom: 1px solid rgb(23 218 204);
@@ -362,26 +367,6 @@ const InputAmountOut = styled.input`
   line-height: 26px;
   min-height: 26px;
   cursor: not-allowed;
-`;
-const ButtonContinue = styled.button`
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 5px;
-  border: 2px solid rgb(37 155 159);
-  width: 100%;
-  height: 40px;
-  font-size: 14px;
-  padding: 20px 10px;
-  color: #cfcfcf;
-  background: rgb(31 101 104);
-  transition: all 0.5s ease-in-out 0s;
-  &:hover {
-    color: white;
-    background: rgb(31 101 104);
-    background: rgb(37 155 159);
-  }
 `;
 const ButtonContinues = styled.div`
   display: flex;

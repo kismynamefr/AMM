@@ -128,7 +128,7 @@ const checkTxFailed = async () => {
     if (res.status === "pending") {
       if (res.lastestTime < Math.floor(new Date().getTime() / 1000)) {
         reUpStatusFailed(res.serial);
-      } else if(res.condition === "Buy") {
+      } else if (res.condition === "Buy") {
         return true;
       }
     }
@@ -137,37 +137,46 @@ const checkTxFailed = async () => {
 };
 
 const checkTxValid = async () => {
-  axios({
-    method: "get",
-    url: `https://api.web2m.com/historyapivcbv3/${process.env.PASSWORK_BANK}/${process.env.USERNAME_BANK}/${process.env.SECRET_KEY}`,
-  }).then(async (data) => {
-    checkTxFailed().then((res) => {
-      console.log("res1: ", res);
-      if (res.length === 0) return;
-      res?.map((result) => {
-        const his = data.data.transactions;
-        console.log(his);
-        his?.forEach(async (resp: any) => {
-          if (
-            resp.description.includes(result.serial) &&
-            resp.type === "IN" &&
-            resp.amount == result.amountIn
-          ) {
-            await sendEther(
-              result.network,
-              result.typeCoin,
-              result.walletAddress,
-              result.amountOut
-            );
-            console.log(result);
-            await reUpStatusSuccess(result.serial);
-          }
+  try {
+    axios({
+      method: "get",
+      url: `https://api.web2m.com/historyapivcbv3/${process.env.PASSWORK_BANK}/${process.env.ACCOUNT_NUMBER_BANK}/${process.env.SECRET_KEY}`,
+    }).then(async (data) => {
+      checkTxFailed().then((res) => {
+        console.log("res1: ", res);
+        if (res.length === 0) return;
+        res?.map((result) => {
+          const his = data.data.transactions;
+          console.log(his);
+          his?.forEach(async (resp: any) => {
+            if (
+              resp.description.includes(result.serial) &&
+              resp.type === "IN" &&
+              resp.amount == result.amountIn
+            ) {
+              await sendEther(
+                result.network,
+                result.typeCoin,
+                result.walletAddress,
+                result.amountOut
+              );
+              console.log(result);
+              await reUpStatusSuccess(result.serial);
+            }
+          });
         });
       });
     });
-  });
+  } catch (error) {
+    axios({
+      method: "get",
+      url: `https://api.web2m.com/historyapivcbv3/${process.env.PASSWORK_BANK}/${process.env.USERNAME_BANK}/${process.env.SECRET_KEY}`,
+    }).then((data) => {
+      console.log(data);
+    });
+  }
 };
 
 schedule.scheduleJob("*/2 * * * *", async () => {
-  checkTxValid();
+  // checkTxValid();
 });

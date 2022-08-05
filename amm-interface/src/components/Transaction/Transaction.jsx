@@ -1,19 +1,29 @@
 import Tippy from "@tippyjs/react";
 import axios from "axios";
 import { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
+import getTx from "../../redux/apiRequest/apiRequestGetTx";
 import Spinner from "../Spinner/Spinner";
 
 function Transaction() {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const transactionResult = useSelector((state) => state.getTx.getTX?.currentTx);
   const [failedTransaction, setFailedTransaction] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successTransaction, setSuccessTransaction] = useState(false);
-  const [dataTransaction, setDataTransaction] = useState({});
-  const serialId = window.location.href.substring(43, 53);
+  const serialId = window.location.href.substring(
+    window.location.href.length - 10
+  );
 
+  console.log("user: ", user);
+  console.log("transactionResult", transactionResult);
+  
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
   };
@@ -69,59 +79,47 @@ function Transaction() {
   };
 
   useEffect(() => {
-    const clearInt = setInterval(() => {
-      axios({
-        method: "get",
-        url: `http://localhost:5506/users/transaction/${serialId}`,
-      }).then((data) => {
-        if (data.data.result.status === "failed") {
-          setFailedTransaction(true);
-        } else if (data.data.result.status === "success") {
-          setSuccessTransaction(true);
-        } else if (data.data.result.status === "pending") {
-          setIsLoading(true);
-        }
-        setDataTransaction(data.data);
-      });
-    }, 900000);
-    return () => clearInterval(clearInt);
-  }, []);
+    if (user) {
+      getTx(serialId, user.accessToken, dispatch);
+    }
+    // if (data.data.status === "Error") {
+    //   setDataTransaction({
+    //     status: "Error",
+    //   });
+    // } else {
+    //   if (data.data.result.status === "failed") {
+    //     console.log(data.data.result);
+    //     setFailedTransaction(true);
+    //   } else if (data.data.result.status === "success") {
+    //     setSuccessTransaction(true);
+    //   } else if (data.data.result.status === "pending") {
+    //     setIsLoading(true);
+    //   }
+    //   setDataTransaction(data.data);
+    // }
+  }, [user]);
 
-  useEffect(() => {
-    axios({
-      method: "get",
-      url: `http://localhost:5506/users/transaction/${serialId}`,
-    }).then((data) => {
-      console.log(data);
-      if (data.data.status === "Error") {
-        setDataTransaction({
-          status: "Error",
-        });
-      } else {
-        if (data.data.result.status === "failed") {
-          console.log(data.data.result);
-          setFailedTransaction(true);
-        } else if (data.data.result.status === "success") {
-          setSuccessTransaction(true);
-        } else if (data.data.result.status === "pending") {
-          setIsLoading(true);
-        }
-        setDataTransaction(data.data);
-      }
-    });
-  }, []);
+  if (!user) {
+    return (
+      <Container>
+        <Body>
+          <h3>Bạn cần đăng nhập</h3>
+        </Body>
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <Body>
-        {dataTransaction.status === "Error" ? (
+        {transactionResult?.status === "Error" ? (
           <h3>
             Không có đơn hàng nào được tạo bởi mã đơn hàng này: {serialId}
           </h3>
-        ) : dataTransaction.status === "Success" ? (
+        ) : transactionResult?.status === "Success" ? (
           <>
-            <h3>Đơn hàng {dataTransaction.result.serial}</h3>
-            <p>Tạo đơn lúc: {handleTime(dataTransaction.result.beginTime)}</p>
+            <h3>Đơn hàng {transactionResult?.result.serial}</h3>
+            <p>Tạo đơn lúc: {handleTime(transactionResult?.result.beginTime)}</p>
             <Table>
               <LeftTable>
                 <h4>THÔNG TIN THANH TOÁN</h4>
@@ -149,7 +147,7 @@ function Transaction() {
                     aria-invalid="false"
                     name="amountIn"
                     readOnly
-                    value={dataTransaction.result.amountIn
+                    value={transactionResult?.result.amountIn
                       .toFixed(0)
                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   />
@@ -160,9 +158,9 @@ function Transaction() {
                   <Tippy content="Copy Nội Dung">
                     <TransferContentButton
                       onClick={handleCopyText}
-                      value={`MBC ${dataTransaction.result.serial}`}
+                      value={`MBC ${transactionResult?.result.serial}`}
                     >
-                      MBC {dataTransaction.result.serial}
+                      MBC {transactionResult?.result.serial}
                     </TransferContentButton>
                   </Tippy>
                 </TransferContent>
@@ -193,24 +191,24 @@ function Transaction() {
                 <h4>THÔNG TIN NHẬN THANH TOÁN</h4>
                 <TransferContent>
                   <p>Mạng lưới: </p>
-                  {convertMainnet(dataTransaction.result.network)}
+                  {convertMainnet(transactionResult?.result.network)}
                 </TransferContent>
                 <TransferContent>
                   <p>Địa chỉ nhận: </p>
                   <Tippy content="Copy Địa Chỉ Nhận">
                     <TransferContentButton
                       onClick={handleCopyText}
-                      value={dataTransaction.result.walletAddress}
+                      value={transactionResult?.result.walletAddress}
                     >
-                      {handleAccount(dataTransaction.result.walletAddress)}
+                      {handleAccount(transactionResult?.result.walletAddress)}
                     </TransferContentButton>
                   </Tippy>
                 </TransferContent>
                 <TransferContent>
                   <p>Số Coin nhận: </p>
                   <StatusButton style={{ background: "rgb(37 155 159)" }}>
-                    {dataTransaction.result.amountOut}{" "}
-                    {dataTransaction.result.typeCoin}
+                    {transactionResult?.result.amountOut}{" "}
+                    {transactionResult?.result.typeCoin}
                   </StatusButton>
                 </TransferContent>
                 <Status>

@@ -1,26 +1,67 @@
-import React, { memo } from "react";
+import Tippy from "@tippyjs/react/headless";
+import React, { memo, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
+import LogOutIcon from "../../assest/Icon/LogOut";
+import Authentication from "./Authentication";
 
 const Nav = () => {
+  const [openModal, setOpenModal] = useState(false);
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const [visible, setVisible] = useState(true);
+  const show = () => setVisible(true);
+  const hide = () => setVisible(false);
+
   return (
-    <Container>
-      <NavHeader>
-        <ContentNav>
-          <HeaderLogo>
-            <a href="#">
-              <img src="https://remitano.com/logo-new-white-small.png" alt="" />
-            </a>
-          </HeaderLogo>
-        </ContentNav>
-        <HeaderTopMenu>
-          <a href="#">Giao Dịch P2P</a>
-          <a href="#">Phí Chuyển Khoản</a>
-          <a href="#">Liên Hệ</a>
-          <a href="#">Điều Khoản</a>
-          <ButtonSign>Sign In</ButtonSign>
-        </HeaderTopMenu>
-      </NavHeader>
-    </Container>
+    <>
+      {openModal ? <Authentication setOpenModal={setOpenModal} /> : null}
+      <Container>
+        <NavHeader>
+          <ContentNav>
+            <HeaderLogo>
+              <a href="#">
+                <img
+                  src="https://remitano.com/logo-new-white-small.png"
+                  alt=""
+                />
+              </a>
+            </HeaderLogo>
+          </ContentNav>
+          <HeaderTopMenu>
+            <a href="#">Giao Dịch P2P</a>
+            <a href="#">Phí Chuyển Khoản</a>
+            <a href="#">Liên Hệ</a>
+            <a href="#">Điều Khoản</a>
+            {user ? (
+              <Tippy
+                content="Tooltip"
+                interactive={true}
+                interactiveBorder={20}
+                delay={100}
+                visible={visible}
+                onClickOutside={hide}
+                render={(attrs) => (
+                  <Profile className="box" tabIndex="-1" {...attrs}>
+                    <p>
+                      {" "}
+                      <LogOutIcon /> Log Out
+                    </p>
+                  </Profile>
+                )}
+              >
+                <UserProfile onClick={visible ? hide : show}>
+                  Hi, {user?.username}
+                </UserProfile>
+              </Tippy>
+            ) : (
+              <ButtonSign onClick={() => setOpenModal(true)}>
+                Sign In
+              </ButtonSign>
+            )}
+          </HeaderTopMenu>
+        </NavHeader>
+      </Container>
+    </>
   );
 };
 
@@ -103,6 +144,36 @@ const ButtonSign = styled.div`
   transition: all 0.5s ease-in-out 0s;
   &:hover {
     background-color: rgb(27 158 161 / 78%) !important;
+  }
+`;
+const UserProfile = styled.div`
+  cursor: pointer;
+  position: relative;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+const Profile = styled.div`
+  max-height: 350px;
+  overflow-y: auto;
+  box-shadow: rgb(0 0 0 / 16%) 0px 4px 16px;
+  background-color: rgb(255, 255, 255);
+  color: rgb(4, 17, 29);
+  max-width: initial;
+  min-width: 220px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  p {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 10px;
+    cursor: pointer;
+    &:hover {
+      transition: all 0.2s ease 0s;
+      box-shadow: rgb(4 17 29 / 25%) 0px 0px 8px 0px;
+      background-color: rgb(251, 253, 255);
+    }
   }
 `;
 export default memo(Nav);

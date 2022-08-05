@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import routerTrx from "./routes/transactionRouter";
 import routerUsers from "./routes/userRouter";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import "./schedule/historybank";
 import { NextFunction, Request, Response } from "express";
 
@@ -24,6 +25,18 @@ mongoose
   .catch((error) => {
     logging.error(NAMESPACE, error.message, error);
   });
+
+/** Limit request API */
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minutes
+  max: 60,
+  handler: (req: Request, res: Response) => {
+    return res.status(429).send({
+      status: 500,
+      message: "Too many requests!",
+    });
+  },
+});
 
 /** Log the request */
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -67,14 +80,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 /** Routes go here */
-app.use("/users", routerTrx);
-app.use("/v1/users", routerUsers);
+app.use("/v1/transaction", apiLimiter, routerTrx);
+app.use("/v1/users", apiLimiter, routerUsers);
 
 /** Error handling */
 app.use((req: Request, res: Response, next: NextFunction) => {
   const error = new Error("Not found");
-
-  res.status(404).json({
+  return res.status(404).json({
     message: error.message,
   });
 });

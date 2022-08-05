@@ -121,7 +121,7 @@ function Transaction() {
     setFailedTxHash(true);
     axios({
       method: "post",
-      url: `http://localhost:5506/users/transactionHash/sendTrx`,
+      url: `http://localhost:5506/v1/transaction/sendTransactionHash/${serialId}`,
       data: {
         serial: serialId,
         txHash: txHash,
@@ -140,7 +140,7 @@ function Transaction() {
   useEffect(() => {
     axios({
       method: "get",
-      url: `http://localhost:5506/users/transactionHash/${serialId}`,
+      url: `http://localhost:5506/v1/transaction/getTransactionHash/${serialId}`,
     }).then((data) => {
       console.log(data);
       if (data.data.status === "Error") {
