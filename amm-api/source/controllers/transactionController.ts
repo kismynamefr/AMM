@@ -20,13 +20,13 @@ const SaveTransaction = async (
     dto
       .save()
       .then((data) => res.status(200).json({ status: "Success" }))
-      .catch((error) => res.status(200).json({ status: "Error" }));
+      .catch((error) => res.status(401).json({ status: "Error", error }));
   } else if (formData.condition === "Buy") {
     const dto = new Transaction(formData);
     dto
       .save()
       .then((data) => res.status(200).json({ status: "Success" }))
-      .catch((error) => res.status(200).json({ status: "Error" }));
+      .catch((error) => res.status(401).json({ status: "Error", error }));
   }
 };
 const GetTransaction = async (
@@ -93,9 +93,9 @@ const HandleTransactionHash = async (
     }
     return data
       ? res.status(200).json({ status: "Success" })
-      : res.status(200).json({ status: "Error" });
+      : res.status(500).json({ status: "Error" });
   } else {
-    return res.status(200).json({ status: "Error" });
+    return res.status(500).json({ status: "Error" });
   }
 };
 

@@ -1,32 +1,34 @@
 import Tippy from "@tippyjs/react";
 import axios from "axios";
 import { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
+import getTXHash from "../../redux/apiRequest/apiRequestGetTxhash";
 import Spinner from "../Spinner/Spinner";
+import Toast from "../Toast/Toast";
 import {
-  StatusButton,
-  Container,
+  AmountOwner,
+  BankOwner,
   Body,
-  Table,
+  Container,
+  InputAmountOwner,
+  InputOwner,
+  LeftTable,
+  Noted,
   RightTable,
-  TransferContent,
-  TransferContentButton,
   Status,
+  StatusButton,
   StatusButtonFailed,
   StatusButtonSuccess,
-  LeftTable,
-  BankOwner,
-  InputOwner,
+  Table,
   TitleLeft,
-  AmountOwner,
-  InputAmountOwner,
-  Noted,
   TitleNoted,
+  TransferContent,
+  TransferContentButton,
 } from "./Transaction";
-import Toast from "../Toast/Toast";
 
 function Transaction() {
   const [failedTransaction, setFailedTransaction] = useState(false);
@@ -37,11 +39,12 @@ function Transaction() {
   const [txHash, setTxHash] = useState("");
   const [formError, setFormError] = useState({});
   const [failedTxHash, setFailedTxHash] = useState(false);
-  const serialId = window.location.href.substring(
-    window.location.href.length - 10
+  const serialId = window.location.href.split("/")[5];
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const transactionHashResult = useSelector(
+    (state) => state.getTXHash.getTXHash?.currentTXHash
   );
-
-  console.log(formError);
 
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
@@ -115,16 +118,22 @@ function Transaction() {
     setTxHash(e.target.value);
   };
   const handleSendTxHash = () => {
-    const idLoading = Toast("loading", "Giao dịch đang được thực hiện");
+    const idLoading = Toast(
+      "loading",
+      "Kiểm tra giao dịch đang được thực hiện"
+    );
     document.getElementById("inputTxhash").readOnly = true;
     document.getElementById("inputTxhash").value = txHash;
     setFailedTxHash(true);
     axios({
       method: "post",
-      url: `http://localhost:5506/v1/transaction/sendTransactionHash/${serialId}`,
+      url: `http://localhost:5506/v1/transaction/sendTransactionHash`,
       data: {
         serial: serialId,
         txHash: txHash,
+      },
+      headers: {
+        token: `Bearer ${user.accessToken}`,
       },
     }).then((data) => {
       if (data.data?.status === "Error") {
@@ -137,35 +146,28 @@ function Transaction() {
     });
   };
 
+  const checkStatusTxHash = () => {
+    return transactionHashResult?.result.status === "failed"
+      ? setFailedTransaction(true)
+      : transactionHashResult?.result.status === "success"
+      ? setSuccessTransaction(true)
+      : setIsLoading(true);
+  };
+
   useEffect(() => {
-    axios({
-      method: "get",
-      url: `http://localhost:5506/v1/transaction/getTransactionHash/${serialId}`,
-    }).then((data) => {
-      console.log(data);
-      if (data.data.status === "Error") {
-        setDataTransaction({
-          status: "Error",
-        });
-      } else {
-        if (data.data.result.status === "failed") {
-          console.log(data.data?.result);
-          setFailedTransaction(true);
-          setFailedTxHash(true);
-        } else if (data.data?.result.status === "success") {
-          setSuccessTransaction(true);
-        } else if (data.data?.result.status === "pending") {
-          if (data.data?.result.txHash.length > 0) {
-            setSuccessSendTxHash(true);
-            setFailedTxHash(true);
-          } else {
-            setIsLoading(true);
-          }
-        }
-        setDataTransaction(data.data);
-      }
-    });
-  }, []);
+    if(transactionHashResult?.result.txHash.length === 66) {
+      setFailedTxHash(true);
+      setSuccessSendTxHash(true);
+    }
+  }, [transactionHashResult])
+
+  useEffect(() => {
+    if (user) getTXHash(serialId, user.accessToken, dispatch);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) checkStatusTxHash();
+  }, [user]);
 
   useEffect(() => {
     if (txHash.length > 0) {
@@ -173,17 +175,29 @@ function Transaction() {
     }
   }, [txHash]);
 
+  if (!user) {
+    return (
+      <Container>
+        <Body>
+          <h3>Bạn cần đăng nhập</h3>
+        </Body>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <Body>
-        {dataTransaction.status === "Error" ? (
+        {transactionHashResult?.status === "Error" ? (
           <h3>
             Không có đơn hàng nào được tạo bởi mã đơn hàng này: {serialId}
           </h3>
-        ) : dataTransaction.status === "Success" ? (
+        ) : transactionHashResult?.status === "Success" ? (
           <>
-            <h3>Đơn hàng {dataTransaction.result.serial}</h3>
-            <p>Tạo đơn lúc: {handleTime(dataTransaction.result.beginTime)}</p>
+            <h3>Đơn hàng {transactionHashResult?.result.serial}</h3>
+            <p>
+              Tạo đơn lúc: {handleTime(transactionHashResult?.result.beginTime)}
+            </p>
             <Table>
               <LeftTable>
                 <h4>THÔNG TIN NHẬN THANH TOÁN</h4>
@@ -195,11 +209,11 @@ function Transaction() {
                     aria-invalid="false"
                     name="amountIn"
                     readOnly
-                    value={dataTransaction.result.accountNumber}
+                    value={transactionHashResult?.result.accountNumber}
                     style={{ color: "white", cursor: "unset" }}
                   />
-                  <span>{dataTransaction.result.nameBank}</span>
-                  <span>{dataTransaction.result.ownerBank}</span>
+                  <span>{transactionHashResult?.result.nameBank}</span>
+                  <span>{transactionHashResult?.result.ownerBank}</span>
                 </BankOwner>
                 <TitleLeft>
                   <h5>Số tiền được nhận:</h5>
@@ -209,7 +223,7 @@ function Transaction() {
                     aria-invalid="false"
                     name="amountIn"
                     readOnly
-                    value={dataTransaction.result.amountOut
+                    value={transactionHashResult?.result.amountOut
                       .toFixed(0)
                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   />
@@ -249,7 +263,7 @@ function Transaction() {
                 <h4>THÔNG TIN ĐÃ ĐƯỢC THANH TOÁN</h4>
                 <TransferContent>
                   <p>Mạng lưới: </p>
-                  {convertMainnet(dataTransaction.result.network)}
+                  {convertMainnet(transactionHashResult?.result.network)}
                 </TransferContent>
                 <TransferContent>
                   <p>Địa chỉ nhận: </p>
@@ -265,8 +279,8 @@ function Transaction() {
                 <TransferContent>
                   <p>Số Coin nhận: </p>
                   <StatusButton style={{ background: "rgb(37 155 159)" }}>
-                    {dataTransaction.result.amountIn}{" "}
-                    {dataTransaction.result.typeCoin}
+                    {transactionHashResult?.result.amountIn}{" "}
+                    {transactionHashResult?.result.typeCoin}
                   </StatusButton>
                 </TransferContent>
                 <TransactionHashInput>
@@ -285,7 +299,7 @@ function Transaction() {
                     onChange={handleTxHash}
                     value={
                       successSendTxHash || failedTransaction
-                        ? dataTransaction.result.txHash
+                        ? transactionHashResult?.result.txHash
                         : undefined
                     }
                   />

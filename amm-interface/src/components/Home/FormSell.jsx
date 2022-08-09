@@ -1,18 +1,24 @@
-import axios from "axios";
 import { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import ArrowDown from "../../assest/Icon/ArrowDown";
 import ArrowUp from "../../assest/Icon/ArrowUp";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
 import useDebounce from "../../hooks/useDebounce";
+import sendTx from "../../redux/apiRequest/apiRequestSendTx";
+import DelayedLink from "../DelayLink/DelayLink";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
 import { Bank } from "./JSONBank";
+import useAxiosJWT from "../../hooks/useAxiosJWT";
 
 const FormSell = ({ coinName }) => {
   const { type, amount, network } = coinName;
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const dispatch = useDispatch();
+  const { handleAxiosJWT } = useAxiosJWT();
   const [openNetworks, setOpenNetworks] = useState(false);
   const [openBanks, setOpenBanks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();
@@ -27,10 +33,10 @@ const FormSell = ({ coinName }) => {
     typeCoin: type,
     amountOut: "0",
   });
-
   const [formError, setFormError] = useState({});
   const [isSpinner, setIsSpinner] = useState(false);
 
+  // console.log(user.accessToken);
   const debounced = useDebounce(formValue, 500);
 
   const handleForm = (e) => {
@@ -88,15 +94,12 @@ const FormSell = ({ coinName }) => {
     return result;
   }
 
-  const handleExcept = () => {
+  const handleExcepted = async () => {
     const beginTime = Math.floor(new Date().getTime() / 1000);
     const lastestTime = beginTime + 30 * 60;
     setIsSpinner(true);
-    const idLoading = Toast("loading", "Đang xử lý tạo giao dịch...");
-    axios({
-      method: "post",
-      url: "http://localhost:5506/v1/transaction/",
-      data: {
+    await sendTx(
+      {
         ...debounced,
         amountOut: (debounced.amountIn * amount).toFixed(0),
         serial: serialTransaction,
@@ -105,15 +108,10 @@ const FormSell = ({ coinName }) => {
         beginTime: beginTime,
         lastestTime: lastestTime,
       },
-    }).then((data) => {
-      console.log(data.data.status);
-      if (data.data.status === "Success") {
-        Toast("update success", "Tạo giao dịch thành công...", idLoading);
-        setTimeout(() => {
-          window.location.href = `http://localhost:3000/Exchange/TransactionHash/${serialTransaction}`;
-        }, 5000);
-      }
-    });
+      user.accessToken,
+      dispatch,
+      handleAxiosJWT(user)
+    );
   };
 
   const handleCheckBank = () => {
@@ -300,19 +298,28 @@ const FormSell = ({ coinName }) => {
           value={formValue.accountNumber}
         />
       </AmountIn>
-      {formError.length != 0 &&
-      formValue.amountIn >= "0.005" &&
-      formValue.ownerBank?.length >= 9 &&
-      formValue.accountNumber?.length >= 9 ? (
-        isSpinner ? (
-          <ButtonContinues>
-            <Spinner />
-          </ButtonContinues>
+      {user ? (
+        formError.length != 0 &&
+        formValue.amountIn >= "0.005" &&
+        formValue.ownerBank?.length >= 9 &&
+        formValue.accountNumber?.length >= 9 ? (
+          isSpinner ? (
+            <ButtonContinues>
+              <Spinner />
+            </ButtonContinues>
+          ) : (
+            <DelayedLink
+              delay={5000}
+              to={`/Exchange/TransactionHash/${serialTransaction}`}
+              state={serialTransaction}
+              handleExcept={handleExcepted}
+            />
+          )
         ) : (
-          <ButtonContinue onClick={handleExcept}>Tiếp Tục</ButtonContinue>
+          <ButtonContinues>Tiếp Tục</ButtonContinues>
         )
       ) : (
-        <ButtonContinues>Tiếp Tục</ButtonContinues>
+        <ButtonContinues>Bạn phải đăng nhập để tiếp tục</ButtonContinues>
       )}
     </>
   );

@@ -1,5 +1,5 @@
-import axios from "axios";
 import { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import BNBIcon from "../../assest/Icon/BNB";
 import useProvider from "../../hooks/useProvider";
@@ -10,6 +10,8 @@ import UserBuy from "./UserBuy";
 import UserSell from "./UserSell";
 
 const Home = () => {
+  const user = useSelector((state) => state.auth.login?.currentUser);
+  const dispatch = useDispatch();
   const [closeNoti, setCloseNoti] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [openFormSell, setOpenFormSell] = useState(false);
@@ -40,6 +42,7 @@ const Home = () => {
     network: "Binance",
     amount: 0,
   });
+  
 
   const handleClosed = () => {
     setCloseNoti(true);
@@ -87,14 +90,14 @@ const Home = () => {
   const handleOpenForm = (type) => {
     setCoinName(type);
     setOpenForm(true);
-    if(openFormSell) {
+    if (openFormSell) {
       setOpenFormSell(false);
     }
   };
   const handleOpenFormSell = (type) => {
     setCoinName(type);
     setOpenFormSell(true);
-    if(openForm) {
+    if (openForm) {
       setOpenForm(false);
     }
   };
@@ -198,13 +201,16 @@ const Home = () => {
           <TitleRightSide>
             <h4>Chọn Coin BẠN CẦN BÁN:</h4>
           </TitleRightSide>
-          <UserSell setOpenFormSell={setOpenFormSell} handleOpenFormSell={handleOpenFormSell}/>
+          <UserSell
+            setOpenFormSell={setOpenFormSell}
+            handleOpenFormSell={handleOpenFormSell}
+          />
         </RightSide>
         <LeftSide>
           {openForm ? (
             <FormBuy coinName={coinName} />
           ) : openFormSell ? (
-            <FormSell coinName={coinName}/>
+            <FormSell coinName={coinName} />
           ) : (
             <UserBuy />
           )}

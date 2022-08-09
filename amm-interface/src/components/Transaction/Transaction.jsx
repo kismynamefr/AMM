@@ -1,8 +1,6 @@
 import Tippy from "@tippyjs/react";
-import axios from "axios";
 import { memo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
@@ -13,17 +11,19 @@ import Spinner from "../Spinner/Spinner";
 function Transaction() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.login?.currentUser);
-  const transactionResult = useSelector((state) => state.getTx.getTX?.currentTx);
+  const transactionResult = useSelector(
+    (state) => state.getTx.getTX?.currentTx
+  );
   const [failedTransaction, setFailedTransaction] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [dataTransaction, setDataTransaction] = useState({});
   const [successTransaction, setSuccessTransaction] = useState(false);
-  const serialId = window.location.href.substring(
-    window.location.href.length - 10
-  );
+  const serialId = window.location.href.split("/")[5];
 
   console.log("user: ", user);
+  console.log("serialId: ", serialId);
   console.log("transactionResult", transactionResult);
-  
+
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
   };
@@ -78,25 +78,20 @@ function Transaction() {
     }
   };
 
+  const checkStatusTx = () => {
+    return transactionResult?.result.status === "failed"
+      ? setFailedTransaction(true)
+      : transactionResult?.result.status === "success"
+      ? setSuccessTransaction(true)
+      : setIsLoading(true);
+  };
+
   useEffect(() => {
-    if (user) {
-      getTx(serialId, user.accessToken, dispatch);
-    }
-    // if (data.data.status === "Error") {
-    //   setDataTransaction({
-    //     status: "Error",
-    //   });
-    // } else {
-    //   if (data.data.result.status === "failed") {
-    //     console.log(data.data.result);
-    //     setFailedTransaction(true);
-    //   } else if (data.data.result.status === "success") {
-    //     setSuccessTransaction(true);
-    //   } else if (data.data.result.status === "pending") {
-    //     setIsLoading(true);
-    //   }
-    //   setDataTransaction(data.data);
-    // }
+    if (user) getTx(serialId, user.accessToken, dispatch);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) checkStatusTx();
   }, [user]);
 
   if (!user) {
@@ -119,7 +114,9 @@ function Transaction() {
         ) : transactionResult?.status === "Success" ? (
           <>
             <h3>Đơn hàng {transactionResult?.result.serial}</h3>
-            <p>Tạo đơn lúc: {handleTime(transactionResult?.result.beginTime)}</p>
+            <p>
+              Tạo đơn lúc: {handleTime(transactionResult?.result.beginTime)}
+            </p>
             <Table>
               <LeftTable>
                 <h4>THÔNG TIN THANH TOÁN</h4>

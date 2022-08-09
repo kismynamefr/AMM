@@ -12,7 +12,6 @@ const DelayedLink = ({ delay, state, to, handleExcept }) => {
 
   const clickHandler = async (e) => {
     e.preventDefault();
-    console.log("hehehehehe");
     const idLoadingToast = await Toast(
       "loading",
       "Đang xử lý tạo giao dịch..."

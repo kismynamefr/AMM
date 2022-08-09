@@ -1,22 +1,20 @@
-import axios from "axios";
 import { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import ArrowDown from "../../assest/Icon/ArrowDown";
 import ArrowUp from "../../assest/Icon/ArrowUp";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
 import useDebounce from "../../hooks/useDebounce";
+import sendTx from "../../redux/apiRequest/apiRequestSendTx";
+import DelayedLink from "../DelayLink/DelayLink";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
-import sendTx from "../../redux/apiRequest/apiRequestSendTx";
-import { useDispatch, useSelector } from "react-redux";
-import DelayedLink from "../DelayLink/DelayLink";
 
 const FormBuy = ({ coinName }) => {
   const { type, amount, network } = coinName;
   const user = useSelector((state) => state.auth.login?.currentUser);
-  const statusSendTX = useSelector((state) => state.sendTx.sendTX?.status);
   const dispatch = useDispatch();
   const [openNetworks, setOpenNetworks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();

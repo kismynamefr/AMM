@@ -13,7 +13,7 @@ const collectionSchema: Schema = new Schema(
     nameBank: { type: String },
     ownerBank: { type: String },
     accountNumber: { type: String },
-    txHash: { type: String, minlength: 66, maxlength: 66, unique: true },
+    txHash: { type: String, minlength: 0, maxlength: 66, unique: true },
     status: { type: String, require: true },
     beginTime: { type: Number, require: true },
     lastestTime: { type: Number, require: true },
