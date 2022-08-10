@@ -1,16 +1,27 @@
 import Tippy from "@tippyjs/react/headless";
 import React, { memo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import LogOutIcon from "../../assest/Icon/LogOut";
+import { logOutUser } from "../../redux/apiRequest/apiRequest";
+import createAxiosJWT from "../../hooks/axiosJWT";
 import Authentication from "./Authentication";
+import { logoutSuccess } from "../../redux/slice/authSlice";
 
 const Nav = () => {
   const [openModal, setOpenModal] = useState(false);
   const user = useSelector((state) => state.auth.login?.currentUser);
+  const dispatch = useDispatch();
   const [visible, setVisible] = useState(true);
   const show = () => setVisible(true);
   const hide = () => setVisible(false);
+  const handleLogOut = () => {
+    logOutUser(
+      user?.accessToken,
+      dispatch,
+      createAxiosJWT(user, dispatch, logoutSuccess)
+    );
+  };
 
   return (
     <>
@@ -42,8 +53,7 @@ const Nav = () => {
                 onClickOutside={hide}
                 render={(attrs) => (
                   <Profile className="box" tabIndex="-1" {...attrs}>
-                    <p>
-                      {" "}
+                    <p onClick={handleLogOut}>
                       <LogOutIcon /> Log Out
                     </p>
                   </Profile>

@@ -6,10 +6,11 @@ import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
-import useAxiosJWT from "../../hooks/useAxiosJWT";
+import createAxiosJWT from "../../hooks/axiosJWT";
 import { getTXHash } from "../../redux/apiRequest/apiRequest";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
+import { getTXHashSuccess } from "../../redux/slice/getTxHashSlice";
 import {
   AmountOwner,
   BankOwner,
@@ -45,7 +46,6 @@ function Transaction() {
   const transactionHashResult = useSelector(
     (state) => state.getTXHash.getTXHash?.currentTXHash
   );
-  const { handleAxiosJWT } = useAxiosJWT();
 
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
@@ -164,7 +164,12 @@ function Transaction() {
 
   useEffect(() => {
     if (user)
-      getTXHash(serialId, user.accessToken, dispatch, handleAxiosJWT(user));
+      getTXHash(
+        serialId,
+        user.accessToken,
+        dispatch,
+        createAxiosJWT(user, dispatch, getTXHashSuccess)
+      );
   }, [user]);
 
   useEffect(() => {

@@ -1,5 +1,12 @@
 import axios from "axios";
-import { loginFailed, loginStart, loginSuccess } from "../slice/authSlice";
+import {
+  loginFailed,
+  loginStart,
+  loginSuccess,
+  logoutStart,
+  logoutSuccess,
+  logoutFailed,
+} from "../slice/authSlice";
 import { getTXFailed, getTXStart, getTXSuccess } from "../slice/getTxSlice";
 import {
   getTXHashFailed,
@@ -72,6 +79,18 @@ export const sendTx = async (transaction, accessToken, dispatch, axiosJWT) => {
   }
 };
 
-export const logOutUser = async (dispatch) => {
-  
+export const logOutUser = async (accessToken, dispatch, axiosJWT) => {
+  dispatch(logoutStart());
+  try {
+    await axiosJWT({
+      method: "post",
+      url: "http://localhost:5506/v1/users/logout",
+      headers: {
+        token: `Bearer ${accessToken}`,
+      },
+    });
+    dispatch(logoutSuccess());
+  } catch (error) {
+    dispatch(logoutFailed());
+  }
 };

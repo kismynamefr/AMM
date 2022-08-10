@@ -5,9 +5,10 @@ import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
-import useAxiosJWT from "../../hooks/useAxiosJWT";
 import { getTX } from "../../redux/apiRequest/apiRequest";
 import Spinner from "../Spinner/Spinner";
+import createAxiosJWT from "../../hooks/axiosJWT";
+import { getTXSuccess } from "../../redux/slice/getTxSlice";
 
 function Transaction() {
   const dispatch = useDispatch();
@@ -15,7 +16,6 @@ function Transaction() {
   const transactionResult = useSelector(
     (state) => state.getTX.getTX?.currentTx
   );
-  const { handleAxiosJWT } = useAxiosJWT();
   const [failedTransaction, setFailedTransaction] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successTransaction, setSuccessTransaction] = useState(false);
@@ -88,7 +88,13 @@ function Transaction() {
   };
 
   useEffect(() => {
-    if (user) getTX(serialId, user.accessToken, dispatch, handleAxiosJWT(user));
+    if (user)
+      getTX(
+        serialId,
+        user.accessToken,
+        dispatch,
+        createAxiosJWT(user, dispatch, getTXSuccess)
+      );
   }, [user]);
 
   useEffect(() => {

@@ -5,7 +5,6 @@ import ArrowDown from "../../assest/Icon/ArrowDown";
 import ArrowUp from "../../assest/Icon/ArrowUp";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
-import useAxiosJWT from "../../hooks/useAxiosJWT";
 import useDebounce from "../../hooks/useDebounce";
 import { sendTx } from "../../redux/apiRequest/apiRequest";
 import DelayedLink from "../DelayLink/DelayLink";
@@ -13,12 +12,13 @@ import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
 import { Bank } from "./JSONBank";
+import createAxiosJWT from "../../hooks/axiosJWT";
+import { sendTXSuccess } from "../../redux/slice/sendTxSlide";
 
 const FormSell = ({ coinName }) => {
   const { type, amount, network } = coinName;
   const user = useSelector((state) => state.auth.login?.currentUser);
   const dispatch = useDispatch();
-  const { handleAxiosJWT } = useAxiosJWT();
   const [openNetworks, setOpenNetworks] = useState(false);
   const [openBanks, setOpenBanks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();
@@ -109,7 +109,7 @@ const FormSell = ({ coinName }) => {
       },
       user.accessToken,
       dispatch,
-      handleAxiosJWT(user)
+      createAxiosJWT(user, dispatch, sendTXSuccess)
     );
   };
 
