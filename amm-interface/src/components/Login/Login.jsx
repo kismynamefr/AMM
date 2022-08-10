@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import EyeClose from "../../assest/Icon/EyeClose";
 import EyeOpen from "../../assest/Icon/EyeOpen";
-import loginUser from "../../redux/apiRequest/apiRequest";
+import { loginUser } from "../../redux/apiRequest/apiRequest";
 import {
   ButtonRegister,
   ButtonRegisterAllowed,
@@ -45,7 +45,7 @@ const Login = ({ setOpenModal }) => {
       Toast("success", "Đăng nhập thành công");
     }
   }, [user]);
-  
+
   useEffect(() => {
     if (errorLogin) {
       Toast("error", "Sai tên đăng nhập hoặc mật khẩu");

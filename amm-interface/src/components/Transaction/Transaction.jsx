@@ -5,25 +5,26 @@ import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
-import getTx from "../../redux/apiRequest/apiRequestGetTx";
+import useAxiosJWT from "../../hooks/useAxiosJWT";
+import { getTX } from "../../redux/apiRequest/apiRequest";
 import Spinner from "../Spinner/Spinner";
 
 function Transaction() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.login?.currentUser);
   const transactionResult = useSelector(
-    (state) => state.getTx.getTX?.currentTx
+    (state) => state.getTX.getTX?.currentTx
   );
+  const { handleAxiosJWT } = useAxiosJWT();
   const [failedTransaction, setFailedTransaction] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [dataTransaction, setDataTransaction] = useState({});
   const [successTransaction, setSuccessTransaction] = useState(false);
   const serialId = window.location.href.split("/")[5];
 
   console.log("user: ", user);
   console.log("serialId: ", serialId);
   console.log("transactionResult", transactionResult);
-
+  console.log("successTransaction: ", successTransaction);
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
   };
@@ -87,18 +88,27 @@ function Transaction() {
   };
 
   useEffect(() => {
-    if (user) getTx(serialId, user.accessToken, dispatch);
+    if (user) getTX(serialId, user.accessToken, dispatch, handleAxiosJWT(user));
   }, [user]);
 
   useEffect(() => {
-    if (user) checkStatusTx();
-  }, [user]);
+    checkStatusTx();
+  }, [transactionResult]);
 
   if (!user) {
     return (
       <Container>
         <Body>
           <h3>Bạn cần đăng nhập</h3>
+        </Body>
+      </Container>
+    );
+  }
+  if (user && !transactionResult) {
+    return (
+      <Container>
+        <Body>
+          Không có đơn hàng nào được tạo bởi mã đơn hàng này: {serialId}
         </Body>
       </Container>
     );

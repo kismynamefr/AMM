@@ -5,14 +5,14 @@ import ArrowDown from "../../assest/Icon/ArrowDown";
 import ArrowUp from "../../assest/Icon/ArrowUp";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
+import useAxiosJWT from "../../hooks/useAxiosJWT";
 import useDebounce from "../../hooks/useDebounce";
-import sendTx from "../../redux/apiRequest/apiRequestSendTx";
+import { sendTx } from "../../redux/apiRequest/apiRequest";
 import DelayedLink from "../DelayLink/DelayLink";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
 import { Bank } from "./JSONBank";
-import useAxiosJWT from "../../hooks/useAxiosJWT";
 
 const FormSell = ({ coinName }) => {
   const { type, amount, network } = coinName;
@@ -36,7 +36,6 @@ const FormSell = ({ coinName }) => {
   const [formError, setFormError] = useState({});
   const [isSpinner, setIsSpinner] = useState(false);
 
-  // console.log(user.accessToken);
   const debounced = useDebounce(formValue, 500);
 
   const handleForm = (e) => {

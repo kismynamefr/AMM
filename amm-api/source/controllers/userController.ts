@@ -129,7 +129,7 @@ const generateJWTToken = (userData: any) => {
     { id: userData.id, admin: userData.admin },
     String(process.env.JWT_ACCESS_KEY),
     {
-      expiresIn: "1h",
+      expiresIn: "60s",
     }
   );
   return accessToken;

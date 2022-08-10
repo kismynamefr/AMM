@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const getTxSlice = createSlice({
-  name: "getTx",
+const getTXSlice = createSlice({
+  name: "getTX",
   initialState: {
     getTX: {
       currentTx: null,
@@ -24,6 +24,6 @@ const getTxSlice = createSlice({
     },
   },
 });
-export const { getTXStart, getTXSuccess, getTXFailed } = getTxSlice.actions;
+export const { getTXStart, getTXSuccess, getTXFailed } = getTXSlice.actions;
 
-export default getTxSlice.reducer;
+export default getTXSlice.reducer;

@@ -6,7 +6,8 @@ import styled from "styled-components";
 import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
-import getTXHash from "../../redux/apiRequest/apiRequestGetTxhash";
+import useAxiosJWT from "../../hooks/useAxiosJWT";
+import { getTXHash } from "../../redux/apiRequest/apiRequest";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import {
@@ -35,7 +36,6 @@ function Transaction() {
   const [isLoading, setIsLoading] = useState(false);
   const [successTransaction, setSuccessTransaction] = useState(false);
   const [successSendTxHash, setSuccessSendTxHash] = useState(false);
-  const [dataTransaction, setDataTransaction] = useState({});
   const [txHash, setTxHash] = useState("");
   const [formError, setFormError] = useState({});
   const [failedTxHash, setFailedTxHash] = useState(false);
@@ -45,6 +45,7 @@ function Transaction() {
   const transactionHashResult = useSelector(
     (state) => state.getTXHash.getTXHash?.currentTXHash
   );
+  const { handleAxiosJWT } = useAxiosJWT();
 
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
@@ -155,19 +156,20 @@ function Transaction() {
   };
 
   useEffect(() => {
-    if(transactionHashResult?.result.txHash.length === 66) {
+    if (transactionHashResult?.result.txHash.length === 66) {
       setFailedTxHash(true);
       setSuccessSendTxHash(true);
     }
-  }, [transactionHashResult])
+  }, [transactionHashResult]);
 
   useEffect(() => {
-    if (user) getTXHash(serialId, user.accessToken, dispatch);
+    if (user)
+      getTXHash(serialId, user.accessToken, dispatch, handleAxiosJWT(user));
   }, [user]);
 
   useEffect(() => {
-    if (user) checkStatusTxHash();
-  }, [user]);
+    checkStatusTxHash();
+  }, [transactionHashResult]);
 
   useEffect(() => {
     if (txHash.length > 0) {
@@ -180,6 +182,15 @@ function Transaction() {
       <Container>
         <Body>
           <h3>Bạn cần đăng nhập</h3>
+        </Body>
+      </Container>
+    );
+  }
+  if (!transactionHashResult) {
+    return (
+      <Container>
+        <Body>
+          Không có đơn hàng nào được tạo bởi mã đơn hàng này: {serialId}
         </Body>
       </Container>
     );

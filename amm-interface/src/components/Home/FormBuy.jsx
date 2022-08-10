@@ -5,8 +5,9 @@ import ArrowDown from "../../assest/Icon/ArrowDown";
 import ArrowUp from "../../assest/Icon/ArrowUp";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
+import useAxiosJWT from "../../hooks/useAxiosJWT";
 import useDebounce from "../../hooks/useDebounce";
-import sendTx from "../../redux/apiRequest/apiRequestSendTx";
+import { sendTx } from "../../redux/apiRequest/apiRequest";
 import DelayedLink from "../DelayLink/DelayLink";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
@@ -16,6 +17,7 @@ const FormBuy = ({ coinName }) => {
   const { type, amount, network } = coinName;
   const user = useSelector((state) => state.auth.login?.currentUser);
   const dispatch = useDispatch();
+  const { handleAxiosJWT } = useAxiosJWT();
   const [openNetworks, setOpenNetworks] = useState(false);
   const [serialTransaction, setSerialTransaction] = useState();
   const [formValue, setFormValue] = useState({
@@ -74,7 +76,7 @@ const FormBuy = ({ coinName }) => {
     return result;
   }
 
-  const handleExcept = async() => {
+  const handleExcept = async () => {
     const beginTime = Math.floor(new Date().getTime() / 1000);
     const lastestTime = beginTime + 30 * 60;
     setIsSpinner(true);
@@ -89,7 +91,8 @@ const FormBuy = ({ coinName }) => {
         lastestTime: lastestTime,
       },
       user.accessToken,
-      dispatch
+      dispatch,
+      handleAxiosJWT(user)
     );
   };
 

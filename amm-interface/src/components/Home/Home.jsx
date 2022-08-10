@@ -1,5 +1,4 @@
 import { memo, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import BNBIcon from "../../assest/Icon/BNB";
 import useProvider from "../../hooks/useProvider";
@@ -10,8 +9,6 @@ import UserBuy from "./UserBuy";
 import UserSell from "./UserSell";
 
 const Home = () => {
-  const user = useSelector((state) => state.auth.login?.currentUser);
-  const dispatch = useDispatch();
   const [closeNoti, setCloseNoti] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [openFormSell, setOpenFormSell] = useState(false);
