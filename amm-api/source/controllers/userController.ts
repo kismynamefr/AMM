@@ -90,7 +90,8 @@ const RefreshToken = async (
   res: Response,
   next: NextFunction
 ) => {
-  let refreshToken = req.cookies.refreshToken;
+  let refreshToken = req.cookies["refreshToken"];
+  console.log("Has been refresh token");
   if (!refreshToken) return res.status(401).json("You are not authenticated");
   if (!RefreshTokenArr?.includes(refreshToken))
     return res.status(401).json("Refresh token is not valid");

@@ -1,14 +1,14 @@
 import axios from "axios";
 import jwt_decode from "jwt-decode";
+axios.defaults.withCredentials = true;
 
 const refreshToken = async () => {
   try {
-    const res = await axios.post(
-      "http://localhost:5506/v1/users/refreshToken",
+    const res = await axios.post("http://localhost:5506/v1/users/refreshToken",
       {
         withCredentials: true,
-      }
-    );
+        headers: { 'Content-Type': 'application/json' }
+      });
     return res.data;
   } catch (error) {
     console.log(error);
@@ -28,7 +28,7 @@ const createAxiosJWT = (user, dispatch, stateSuccess) => {
           accessToken: data.accessToken,
         };
         dispatch(stateSuccess(refreshUser));
-        config.headers["token"] = `Bearer ${data.accessToken}`;
+        config.headers["token"] = "Bearer " + data.accessToken;
       }
       return config;
     },
