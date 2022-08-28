@@ -9,7 +9,7 @@ const refreshToken = async () => {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' }
       });
-    return res.data;
+    return res?.data;
   } catch (error) {
     console.log(error);
   }
@@ -20,19 +20,20 @@ const createAxiosJWT = (user, dispatch, stateSuccess) => {
   axiosJWT.interceptors.request.use(
     async (config) => {
       let dateUnixTime = new Date().getTime() / 1000;
-      const decodedToken = jwt_decode(user?.accessToken);
+      const decodedToken = jwt_decode(user.accessToken);
       if (decodedToken.exp < dateUnixTime) {
-        const data = await refreshToken();
+        const accessToken = await refreshToken();
         const refreshUser = {
           ...user,
-          accessToken: data.accessToken,
+          accessToken: accessToken,
         };
         dispatch(stateSuccess(refreshUser));
-        config.headers["token"] = "Bearer " + data.accessToken;
+        config.headers["token"] = "Bearer " + accessToken;
       }
       return config;
     },
     (err) => {
+      console.log(err);
       return Promise.reject(err);
     }
   );

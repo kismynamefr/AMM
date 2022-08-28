@@ -16,7 +16,7 @@ export const Bank = [
         urlIcon: "https://brandlogos.net/wp-content/uploads/2021/10/acb-logo.png",
     },
     {
-        name: "MBbank",
+        name: "MB",
         urlIcon: "https://marketingai.admicro.vn/wp-content/uploads/2019/11/20376024_1618820858141634_5851193635503565142_n-min.png",
     },
     {

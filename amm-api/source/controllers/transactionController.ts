@@ -20,13 +20,13 @@ const SaveTransaction = async (
     dto
       .save()
       .then((data) => res.status(200).json({ status: "Success" }))
-      .catch((error) => res.status(401).json({ status: "Error", error }));
+      .catch((error) => res.status(401).json({ error }));
   } else if (formData.condition === "Buy") {
     const dto = new Transaction(formData);
     dto
       .save()
       .then((data) => res.status(200).json({ status: "Success" }))
-      .catch((error) => res.status(401).json({ status: "Error", error }));
+      .catch((error) => res.status(401).json({ error }));
   }
 };
 const GetTransaction = async (
@@ -83,17 +83,18 @@ const HandleTransactionHash = async (
       result?.beginTime,
       result?.amountIn
     );
-    console.log("result: ", data);
-    if (data) {
+    console.log("result check network: ", data);
+    if (data.length) {
       await Transaction.updateOne(
         { serial: formValue.serial },
         { txHash: formValue.txHash }
       );
       console.log(`update txHash success ${formValue.serial}`);
+      return res.status(200).json({ status: "Success" })
+    } else {
+      await Transaction.updateOne({ serial: formValue.serial }, { status: "failed" });
+      return res.status(200).json({ status: "Error" });
     }
-    return data
-      ? res.status(200).json({ status: "Success" })
-      : res.status(500).json({ status: "Error" });
   } else {
     return res.status(500).json({ status: "Error" });
   }

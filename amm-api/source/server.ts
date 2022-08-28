@@ -7,6 +7,7 @@ import config from "./config/config";
 import mongoose from "mongoose";
 import routerTrx from "./routes/transactionRouter";
 import routerUsers from "./routes/userRouter";
+import routerPFM from "./routes/perfectMoneyRouter";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import "./schedule/historybank";
@@ -84,6 +85,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 /** Routes go here */
 app.use("/v1/transaction", apiLimiter, routerTrx);
 app.use("/v1/users", apiLimiter, routerUsers);
+app.use("/v1/perfectmoney", apiLimiter, routerPFM);
 
 /** Error handling */
 app.use((req: Request, res: Response, next: NextFunction) => {

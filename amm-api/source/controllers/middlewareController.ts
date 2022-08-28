@@ -11,8 +11,10 @@ const verifyAccessToken = (req: Request, res: Response, next: NextFunction) => {
       String(process.env.JWT_ACCESS_KEY),
       (err: any, user: any) => {
         if (err) return res.status(403).json("Token is not valid");
-        req["user"] = user;
-        next();
+        else {
+          req["user"] = user;
+          next();
+        }
       }
     );
   } else {

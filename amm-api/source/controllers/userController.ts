@@ -91,7 +91,6 @@ const RefreshToken = async (
   next: NextFunction
 ) => {
   let refreshToken = req.cookies["refreshToken"];
-  console.log("Has been refresh token");
   if (!refreshToken) return res.status(401).json("You are not authenticated");
   if (!RefreshTokenArr?.includes(refreshToken))
     return res.status(401).json("Refresh token is not valid");
@@ -112,6 +111,7 @@ const RefreshToken = async (
         path: "/",
         sameSite: "strict",
       });
+      console.log("Has been refresh token");
       return res.status(200).json(newAccessToken);
     }
   );
@@ -130,7 +130,7 @@ const generateJWTToken = (userData: any) => {
     { id: userData.id, admin: userData.admin },
     String(process.env.JWT_ACCESS_KEY),
     {
-      expiresIn: "30s",
+      expiresIn: "6h",
     }
   );
   return accessToken;

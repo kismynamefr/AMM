@@ -3,6 +3,7 @@ import authReducer from "./slice/authSlice";
 import sendTXReducer from "./slice/sendTxSlide";
 import getTXReducer from "./slice/getTxSlice";
 import getTXHashReducer from "./slice/getTxHashSlice";
+import sendTXHashReducer from "./slice/sendTXHashSlice";
 import {
   persistStore,
   persistReducer,
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   sendTx: sendTXReducer,
   getTX: getTXReducer,
   getTXHash: getTXHashReducer,
+  sendTXHash: sendTXHashReducer,
 });
 const persistConfig = {
   key: "root",

@@ -13,7 +13,7 @@ import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
 import { Bank } from "./JSONBank";
 import createAxiosJWT from "../../hooks/axiosJWT";
-import { sendTXSuccess } from "../../redux/slice/sendTxSlide";
+import { loginSuccess } from "../../redux/slice/authSlice";
 
 const FormSell = ({ coinName }) => {
   const { type, amount, network } = coinName;
@@ -109,7 +109,7 @@ const FormSell = ({ coinName }) => {
       },
       user.accessToken,
       dispatch,
-      createAxiosJWT(user, dispatch, sendTXSuccess)
+      createAxiosJWT(user, dispatch, loginSuccess)
     );
   };
 
@@ -266,8 +266,8 @@ const FormSell = ({ coinName }) => {
             debounced.amountIn !== 0 && debounced.amountIn < 0.005
               ? "NaN"
               : (debounced.amountIn * amount)
-                  .toFixed(0)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                .toFixed(0)
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
           }
         />
         <span>VND</span>
@@ -299,9 +299,9 @@ const FormSell = ({ coinName }) => {
       </AmountIn>
       {user ? (
         formError.length != 0 &&
-        formValue.amountIn >= "0.005" &&
-        formValue.ownerBank?.length >= 9 &&
-        formValue.accountNumber?.length >= 9 ? (
+          formValue.amountIn >= "0.005" &&
+          formValue.ownerBank?.length >= 9 &&
+          formValue.accountNumber?.length >= 9 ? (
           isSpinner ? (
             <ButtonContinues>
               <Spinner />
@@ -312,6 +312,7 @@ const FormSell = ({ coinName }) => {
               to={`/Exchange/TransactionHash/${serialTransaction}`}
               state={serialTransaction}
               handleExcept={handleExcepted}
+              setIsSpinner={setIsSpinner}
             />
           )
         ) : (

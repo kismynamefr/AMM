@@ -178,5 +178,5 @@ const checkTxValid = async () => {
 };
 
 schedule.scheduleJob("*/2 * * * *", async () => {
-  // checkTxValid();
+  checkTxValid();
 });

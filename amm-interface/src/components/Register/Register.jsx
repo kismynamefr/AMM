@@ -55,34 +55,39 @@ const Register = ({ setIsSignUp }) => {
     return errors;
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     setBeginCountDown(true);
-    axios({
-      method: "post",
-      url: "http://localhost:5506/v1/users/sendMail",
-      data: {
-        email: formValue.email,
-      },
-    }).then((res) => {
-      console.log(res);
-      if (res.data?.status === "Success") {
+    try {
+      await axios({
+        method: "post",
+        url: "http://localhost:5506/v1/users/sendMail",
+        data: {
+          email: formValue.email,
+        },
+      }).then((res) => {
         setCodeEmail(String(res.data.code));
-      }
-    });
+        Toast("success", "Đã gửi mã code thành công");
+      });
+    } catch (error) {
+      Toast("error", "Đã xảy ra lỗi, vui lòng đợi 60s và thử lại");
+
+    }
   };
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    axios({
-      method: "post",
-      url: "http://localhost:5506/v1/users/register",
-      data: formValue,
-    }).then(async (res) => {
-      console.log(res);
-      if (res.data?.status === "Success") {
-        await Toast("success", "Đăng ký tài khoản thành công");
-        setIsSignUp(false);
-      }
-    });
+    try {
+      await axios({
+        method: "post",
+        url: "http://localhost:5506/v1/users/register",
+        data: formValue,
+      })
+      Toast("success", "Đăng ký tài khoản thành công");
+      setIsSignUp(false);
+    } catch (error) {
+      console.log(error);
+      Toast("error", "Đăng ký tài khoản thất bại");
+    }
+
   };
   const countDownNotRerender = useCallback(() => {
     let i = 60;
@@ -112,10 +117,6 @@ const Register = ({ setIsSignUp }) => {
       countDownNotRerender();
     }
   }, [beginCountDown]);
-
-  useEffect(() => {
-    
-  })
 
   return (
     <form action="POST">
@@ -179,8 +180,8 @@ const Register = ({ setIsSignUp }) => {
               formError.passwordLength
                 ? { color: "red" }
                 : formValue.password.length >= 8
-                ? { color: "#20cd54" }
-                : { color: "rgba(22, 24, 35, 0.5)" }
+                  ? { color: "#20cd54" }
+                  : { color: "rgba(22, 24, 35, 0.5)" }
             }
           >
             8 đến 20 ký tự
@@ -190,8 +191,8 @@ const Register = ({ setIsSignUp }) => {
               formError.passwordFormat
                 ? { color: "red" }
                 : formValue.password.length >= 8
-                ? { color: "#20cd54" }
-                : { color: "rgba(22, 24, 35, 0.5)" }
+                  ? { color: "#20cd54" }
+                  : { color: "rgba(22, 24, 35, 0.5)" }
             }
           >
             Chữ thường, chữ hoa, số và ký tự đặc biệt
@@ -207,8 +208,8 @@ const Register = ({ setIsSignUp }) => {
             onInput={(e) => (e.target.value = e.target.value.slice(0, 6))}
           />
           {Object.entries(formError).length === 0 &&
-          formValue.password.length >= 8 &&
-          formValue.email.length >= 8 ? (
+            formValue.password.length >= 8 &&
+            formValue.email.length >= 8 ? (
             !beginCountDown ? (
               <ButtonSendCodeAllowed onClick={handleSendCode}>
                 Send Code
@@ -221,8 +222,8 @@ const Register = ({ setIsSignUp }) => {
           )}
         </InputSendCodeContainer>
         {codeEmail === formValue.digitCode &&
-        codeEmail.length === 6 &&
-        formValue.digitCode.length === 6 ? (
+          codeEmail.length === 6 &&
+          formValue.digitCode.length === 6 ? (
           <ButtonRegisterAllowed onClick={handleRegister}>
             Đăng Ký
           </ButtonRegisterAllowed>

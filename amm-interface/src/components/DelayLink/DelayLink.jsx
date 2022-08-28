@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
 import Toast from "../Toast/Toast";
+import { useSelector } from "react-redux";
 
-const DelayedLink = ({ delay, state, to, handleExcept }) => {
+const DelayedLink = ({ delay, state, to, handleExcept, setIsSpinner }) => {
   const navigate = useNavigate();
   const timerRef = useRef();
+  const errorSendTX = useSelector(
+    (state) => state.sendTx?.sendTX?.error
+  );
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
@@ -18,12 +22,17 @@ const DelayedLink = ({ delay, state, to, handleExcept }) => {
     );
     await handleExcept();
     timerRef.current = setTimeout(async () => {
-      await navigate(to);
-      await Toast(
-        "update success",
-        "Tạo giao dịch đã hoàn thành",
-        idLoadingToast
-      );
+      if (errorSendTX) {
+        Toast("update reject", "Tạo giao dịch không thành công", idLoadingToast);
+        setIsSpinner(false);
+      } else {
+        navigate(to);
+        Toast(
+          "update success",
+          "Tạo giao dịch đã hoàn thành",
+          idLoadingToast
+        );
+      }
     }, delay);
   };
   return (

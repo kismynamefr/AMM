@@ -2,16 +2,18 @@ import Tippy from "@tippyjs/react/headless";
 import React, { memo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import Cookies from 'universal-cookie';
 import LogOutIcon from "../../assest/Icon/LogOut";
-import { logOutUser } from "../../redux/apiRequest/apiRequest";
 import createAxiosJWT from "../../hooks/axiosJWT";
-import Authentication from "./Authentication";
+import { logOutUser } from "../../redux/apiRequest/apiRequest";
 import { logoutSuccess } from "../../redux/slice/authSlice";
+import Authentication from "./Authentication";
 
 const Nav = () => {
   const [openModal, setOpenModal] = useState(false);
   const user = useSelector((state) => state.auth.login?.currentUser);
   const dispatch = useDispatch();
+  const cookies = new Cookies();
   const [visible, setVisible] = useState(true);
   const show = () => setVisible(true);
   const hide = () => setVisible(false);
@@ -21,6 +23,7 @@ const Nav = () => {
       dispatch,
       createAxiosJWT(user, dispatch, logoutSuccess)
     );
+    localStorage.clear();
   };
 
   return (

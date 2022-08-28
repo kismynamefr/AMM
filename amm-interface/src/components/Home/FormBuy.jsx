@@ -8,11 +8,11 @@ import Ethereum from "../../assest/token/Ethereum";
 import createAxiosJWT from "../../hooks/axiosJWT";
 import useDebounce from "../../hooks/useDebounce";
 import { sendTx } from "../../redux/apiRequest/apiRequest";
+import { loginSuccess } from "../../redux/slice/authSlice";
 import DelayedLink from "../DelayLink/DelayLink";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
 import { TitleRightSide } from "./Home";
-import { sendTXSuccess } from "../../redux/slice/sendTxSlide";
 
 const FormBuy = ({ coinName }) => {
   const { type, amount, network } = coinName;
@@ -77,23 +77,29 @@ const FormBuy = ({ coinName }) => {
   }
 
   const handleExcept = async () => {
-    const beginTime = Math.floor(new Date().getTime() / 1000);
-    const lastestTime = beginTime + 30 * 60;
-    setIsSpinner(true);
-    sendTx(
-      {
-        ...debounced,
-        amountIn: (debounced.amountOut * amount).toFixed(0),
-        serial: serialTransaction,
-        status: "pending",
-        condition: "Buy",
-        beginTime: beginTime,
-        lastestTime: lastestTime,
-      },
-      user.accessToken,
-      dispatch,
-      createAxiosJWT(user, dispatch, sendTXSuccess)
-    );
+    try {
+      const beginTime = Math.floor(new Date().getTime() / 1000);
+      const lastestTime = beginTime + 30 * 60;
+      setIsSpinner(true);
+      sendTx(
+        {
+          ...debounced,
+          amountIn: (debounced.amountOut * amount).toFixed(0),
+          serial: serialTransaction,
+          status: "pending",
+          condition: "Buy",
+          beginTime: beginTime,
+          lastestTime: lastestTime,
+        },
+        user.accessToken,
+        dispatch,
+        createAxiosJWT(user, dispatch, loginSuccess)
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+
   };
 
   useEffect(() => {
@@ -199,8 +205,8 @@ const FormBuy = ({ coinName }) => {
             debounced.amountOut != 0 && debounced.amountOut < 0.005
               ? "NaN"
               : (debounced.amountOut * amount)
-                  .toFixed(0)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                .toFixed(0)
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
           }
         />
         <span>VND</span>
@@ -222,8 +228,8 @@ const FormBuy = ({ coinName }) => {
       </AmountIn>
       {user ? (
         formError.length != 0 &&
-        formValue.amountOut >= "0.005" &&
-        formValue.walletAddress.length === 42 ? (
+          formValue.amountOut >= "0.005" &&
+          formValue.walletAddress.length === 42 ? (
           isSpinner ? (
             <ButtonContinues>
               <Spinner />
@@ -234,6 +240,7 @@ const FormBuy = ({ coinName }) => {
               to={`/Exchange/Transaction/${serialTransaction}`}
               state={serialTransaction}
               handleExcept={handleExcept}
+              setIsSpinner={setIsSpinner}
             />
           )
         ) : (

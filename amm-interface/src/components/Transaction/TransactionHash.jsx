@@ -1,5 +1,4 @@
 import Tippy from "@tippyjs/react";
-import axios from "axios";
 import { memo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -7,10 +6,10 @@ import "tippy.js/dist/tippy.css";
 import BNB from "../../assest/Icon/BNB";
 import Ethereum from "../../assest/token/Ethereum";
 import createAxiosJWT from "../../hooks/axiosJWT";
-import { getTXHash } from "../../redux/apiRequest/apiRequest";
+import { getTXHash, sendTXHash } from "../../redux/apiRequest/apiRequest";
+import { loginSuccess } from "../../redux/slice/authSlice";
 import Spinner from "../Spinner/Spinner";
 import Toast from "../Toast/Toast";
-import { getTXHashSuccess } from "../../redux/slice/getTxHashSlice";
 import {
   AmountOwner,
   BankOwner,
@@ -29,7 +28,7 @@ import {
   TitleLeft,
   TitleNoted,
   TransferContent,
-  TransferContentButton,
+  TransferContentButton
 } from "./Transaction";
 
 function Transaction() {
@@ -44,7 +43,10 @@ function Transaction() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.login?.currentUser);
   const transactionHashResult = useSelector(
-    (state) => state.getTXHash.getTXHash?.currentTXHash
+    (state) => state.getTXHash?.getTXHash?.currentTXHash
+  );
+  const sendTransactionHashResult = useSelector(
+    (state) => state.sendTXHash.sendTXHash?.status
   );
 
   const handleCopyText = (e) => {
@@ -123,40 +125,36 @@ function Transaction() {
       "loading",
       "Kiểm tra giao dịch đang được thực hiện"
     );
-    document.getElementById("inputTxhash").readOnly = true;
-    document.getElementById("inputTxhash").value = txHash;
     setFailedTxHash(true);
-    axios({
-      method: "post",
-      url: `http://localhost:5506/v1/transaction/sendTransactionHash`,
-      data: {
-        serial: serialId,
-        txHash: txHash,
-      },
-      headers: {
-        token: `Bearer ${user.accessToken}`,
-      },
-    }).then((data) => {
-      if (data.data?.status === "Error") {
-        setFailedTransaction(true);
-        Toast("update reject", "Giao dịch bị hủy bỏ", idLoading);
-      } else if (data.data?.status === "Success") {
-        Toast("update success", "Đã nhận tiền thành công", idLoading);
-        setSuccessSendTxHash(true);
-      }
-    });
+    const dataHash = {
+      serial: serialId,
+      txHash: txHash,
+    }
+    sendTXHash(dataHash, user.accessToken, dispatch, createAxiosJWT(user, dispatch, loginSuccess))
+    console.log(sendTransactionHashResult);
+    checkSendTXHash(idLoading)
   };
+
+  const checkSendTXHash = (idLoading) => {
+    if (sendTransactionHashResult && sendTransactionHashResult === "Error") {
+      setFailedTransaction(true);
+      Toast("update reject", "Bạn đã gửi Transaction Hash không đúng. Giao dịch bị hủy bỏ", idLoading);
+    } else if (sendTransactionHashResult && sendTransactionHashResult === "Success") {
+      Toast("update success", "Đã nhận tiền thành công", idLoading);
+      setSuccessSendTxHash(true);
+    };
+  }
 
   const checkStatusTxHash = () => {
     return transactionHashResult?.result.status === "failed"
       ? setFailedTransaction(true)
       : transactionHashResult?.result.status === "success"
-      ? setSuccessTransaction(true)
-      : setIsLoading(true);
+        ? setSuccessTransaction(true)
+        : setIsLoading(true);
   };
 
   useEffect(() => {
-    if (transactionHashResult?.result.txHash.length === 66) {
+    if (transactionHashResult?.result?.txHash?.length === 66) {
       setFailedTxHash(true);
       setSuccessSendTxHash(true);
     }
@@ -168,9 +166,9 @@ function Transaction() {
         serialId,
         user.accessToken,
         dispatch,
-        createAxiosJWT(user, dispatch, getTXHashSuccess)
+        createAxiosJWT(user, dispatch, loginSuccess)
       );
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     checkStatusTxHash();
@@ -301,24 +299,25 @@ function Transaction() {
                 </TransferContent>
                 <TransactionHashInput>
                   <p>Transaction Hash: </p>
-                  <TXInput
-                    id="inputTxhash"
-                    placeholder="Nhập Transaction Hash"
-                    bgCol={
-                      successSendTxHash || failedTransaction
-                        ? "rgb(37, 155, 159)"
-                        : "white"
-                    }
-                    txCol={
-                      successSendTxHash || failedTransaction ? "white" : "black"
-                    }
-                    onChange={handleTxHash}
-                    value={
-                      successSendTxHash || failedTransaction
-                        ? transactionHashResult?.result.txHash
-                        : undefined
-                    }
-                  />
+                  {
+                    successSendTxHash || failedTransaction || transactionHashResult?.result.txHash?.length ?
+                      <TXInput
+                        id="inputTxhash"
+                        bgCol="rgb(37, 155, 159)"
+                        txCol="white"
+                        value={transactionHashResult?.result.txHash ? transactionHashResult?.result.txHash : txHash}
+                        readOnly={true}
+                      /> :
+                      <TXInput
+                        id="inputTxhash"
+                        placeholder="Nhập Transaction Hash"
+                        bgCol="white"
+                        txCol="black"
+                        onChange={handleTxHash}
+                      />
+
+                  }
+
                 </TransactionHashInput>
                 <Status>
                   <p>Trạng thái:</p>
@@ -333,7 +332,7 @@ function Transaction() {
                     </StatusButton>
                   )}
                 </Status>
-                {failedTxHash ? null : formError.length !== 0 &&
+                {failedTxHash || transactionHashResult?.result.status === "failed" ? null : formError.length !== 0 &&
                   txHash.length === 66 ? (
                   <TransferContentButton onClick={handleSendTxHash}>
                     Gửi Transaction Hash

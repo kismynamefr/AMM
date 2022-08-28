@@ -19,7 +19,10 @@ export const checkNetwork = async (
       console.log("Ethereum");
       resultEtherAPI = await getTransactionHashByEtherAPI(typeCoin);
       const txHashEtherAPI = resultEtherAPI?.filter(
-        (rols: any) => rols?.hash === txHash && rols?.tokenSymbol === typeCoin
+        (rols: any) =>
+          rols?.tokenSymbol === typeCoin &&
+          rols?.value === convertNumber(amountIn, Number(rols?.tokenDecimal)) &&
+          rols?.timeStamp > beginTime
       );
       return txHashEtherAPI;
     case "Binance":

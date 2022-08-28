@@ -14,6 +14,7 @@ import {
   getTXHashSuccess,
 } from "../slice/getTxHashSlice";
 import { sendTXFailed, sendTXStart, sendTXSuccess } from "../slice/sendTxSlide";
+import { sendTXHashStart, sendTXHashSuccess, sendTXHashFailed } from "../slice/sendTXHashSlice";
 
 export const loginUser = async (user, dispatch) => {
   dispatch(loginStart());
@@ -39,6 +40,7 @@ export const getTX = async (serialId, accessToken, dispatch, axiosJWT) => {
         token: `Bearer ${accessToken}`,
       },
     });
+    console.log(res?.data);
     dispatch(getTXSuccess(res?.data));
   } catch (error) {
     dispatch(getTXFailed());
@@ -75,6 +77,7 @@ export const sendTx = async (transaction, accessToken, dispatch, axiosJWT) => {
     console.log(res?.data);
     dispatch(sendTXSuccess(res.data.status));
   } catch (error) {
+    console.log(error);
     dispatch(sendTXFailed());
   }
 };
@@ -92,5 +95,22 @@ export const logOutUser = async (accessToken, dispatch, axiosJWT) => {
     dispatch(logoutSuccess());
   } catch (error) {
     dispatch(logoutFailed());
+  }
+};
+
+export const sendTXHash = async (dataTXHash, accessToken, dispatch, axiosJWT) => {
+  dispatch(sendTXHashStart());
+  try {
+    const data = await axiosJWT({
+      method: "post",
+      url: `http://localhost:5506/v1/transaction/sendTransactionHash`,
+      data: dataTXHash,
+      headers: {
+        token: `Bearer ${accessToken}`,
+      },
+    });
+    dispatch(sendTXHashSuccess(data?.data.status));
+  } catch (error) {
+    dispatch(sendTXHashFailed());
   }
 };

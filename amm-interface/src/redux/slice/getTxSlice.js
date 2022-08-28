@@ -20,6 +20,7 @@ const getTXSlice = createSlice({
     },
     getTXFailed: (state) => {
       state.getTX.isFetching = false;
+      state.getTX.currentTx = null;
       state.getTX.error = true;
     },
   },

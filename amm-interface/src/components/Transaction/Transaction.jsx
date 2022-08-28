@@ -8,7 +8,7 @@ import Ethereum from "../../assest/token/Ethereum";
 import { getTX } from "../../redux/apiRequest/apiRequest";
 import Spinner from "../Spinner/Spinner";
 import createAxiosJWT from "../../hooks/axiosJWT";
-import { getTXSuccess } from "../../redux/slice/getTxSlice";
+import { loginSuccess } from "../../redux/slice/authSlice";
 
 function Transaction() {
   const dispatch = useDispatch();
@@ -21,10 +21,6 @@ function Transaction() {
   const [successTransaction, setSuccessTransaction] = useState(false);
   const serialId = window.location.href.split("/")[5];
 
-  console.log("user: ", user);
-  console.log("serialId: ", serialId);
-  console.log("transactionResult", transactionResult);
-  console.log("successTransaction: ", successTransaction);
   const handleCopyText = (e) => {
     navigator.clipboard.writeText(e.target.value);
   };
@@ -83,8 +79,8 @@ function Transaction() {
     return transactionResult?.result.status === "failed"
       ? setFailedTransaction(true)
       : transactionResult?.result.status === "success"
-      ? setSuccessTransaction(true)
-      : setIsLoading(true);
+        ? setSuccessTransaction(true)
+        : setIsLoading(true);
   };
 
   useEffect(() => {
@@ -93,7 +89,7 @@ function Transaction() {
         serialId,
         user.accessToken,
         dispatch,
-        createAxiosJWT(user, dispatch, getTXSuccess)
+        createAxiosJWT(user, dispatch, loginSuccess)
       );
   }, [user]);
 
